@@ -5,6 +5,7 @@ import FieldString from './FieldString'
 import InputButton from './InputButton'
 import ModalLoading from './ModalLoading'
 import ModalInfo from './ModalInfo'
+import ModalPrompt from './ModalPrompt'
 import Modal from './Modal'
 import { MdCloudUpload } from 'react-icons/md'
 
@@ -21,6 +22,8 @@ export default class ModalExport extends React.Component {
     super(props);
     this.state = {
       activeInfo: null,
+      activePromptCallback: null,
+      activePromptMessage: "",
       activeRequest: null,
       activeRequestMessage: "",
       error: null,
@@ -120,16 +123,60 @@ export default class ModalExport extends React.Component {
     })
   }
 
-  uploadAzureMapsMapConfiguration = (e) => {
+  onClickUploadAzureMapsMapConfiguration = (e) => {
     e.preventDefault();
 
     this.clearError();
 
+    this.props.azureMapsExtension.getStyleId(this.props.azureMapsExtension.styleAlias)
+    .then(styleId => {
+      if (styleId) {
+        this.setState({
+          activePromptCallback: (confirmed) => {
+            this.setState({
+              activePromptCallback: null,
+              activePromptMessage: ""
+            });
+            if (confirmed) {
+              this.checkExistingMapConfigurationAndUpload();
+            }
+          },
+          activePromptMessage: "Do you want to overwrite style "+this.props.azureMapsExtension.styleAlias+"?"
+        });
+      } else {
+        this.checkExistingMapConfigurationAndUpload();
+      }
+    });
+  }
+
+  checkExistingMapConfigurationAndUpload = () => {
+    this.props.azureMapsExtension.getMapConfigurationId(this.props.azureMapsExtension.mapConfigurationAlias)
+    .then(mapConfigurationId => {
+      if (mapConfigurationId) {
+        this.setState({
+          activePromptCallback: (confirmed) => {
+            this.setState({
+              activePromptCallback: null,
+              activePromptMessage: ""
+            });
+            if (confirmed) {
+              this.uploadAzureMapsMapConfiguration();
+            }
+          },
+          activePromptMessage: "Do you want to overwrite map configuration "+this.props.azureMapsExtension.mapConfigurationAlias+"?"
+        });
+      } else {
+        this.uploadAzureMapsMapConfiguration();
+      }
+    });
+  }
+
+  uploadAzureMapsMapConfiguration = () => {
     let canceled;
     let resultingStyleId;
 
     this.props.azureMapsExtension.uploadResultingStyle(this.props.mapStyle, canceled)
-    .then((styleId) => {
+    .then(styleId => {
       if(canceled) {
         return;
       }
@@ -141,7 +188,7 @@ export default class ModalExport extends React.Component {
       resultingStyleId = styleId;
       return this.props.azureMapsExtension.uploadResultingMapConfiguration(styleId, canceled);
     })
-    .then((mapConfigurationId) => {
+    .then(mapConfigurationId => {
       if(canceled) {
         return;
       }
@@ -193,7 +240,7 @@ export default class ModalExport extends React.Component {
 
     let modalInfoMessage = "";
     if (this.state.activeInfo) {
-      modalInfoMessage = this.state.activeInfo.map(text => <p>{text}</p>);
+      modalInfoMessage = this.state.activeInfo.map((text, i) => <p key={i}>{text}</p>);
     }
 
     return (
@@ -245,7 +292,7 @@ export default class ModalExport extends React.Component {
 
             <div className="maputnik-modal-export-buttons">
               <InputButton
-                onClick={this.uploadAzureMapsMapConfiguration.bind(this)}
+                onClick={this.onClickUploadAzureMapsMapConfiguration.bind(this)}
               >
                 <MdCloudUpload />
                 Upload map configuration
@@ -263,9 +310,16 @@ export default class ModalExport extends React.Component {
 
         <ModalInfo
           isOpen={!!this.state.activeInfo}
-          onOpenToggle={() => this.clearError()}
+          onOpenToggle={() => this.onOpenToggle()}
           title="Upload complete"
           message={modalInfoMessage}
+        />
+
+        <ModalPrompt
+          isOpen={!!this.state.activePromptCallback}
+          onOpenToggle={(decision) => this.state.activePromptCallback(decision)}
+          title="Warning"
+          message={this.state.activePromptMessage}
         />
 
       </div>

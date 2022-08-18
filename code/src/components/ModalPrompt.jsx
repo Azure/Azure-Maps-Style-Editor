@@ -5,7 +5,7 @@ import InputButton from './InputButton'
 import Modal from './Modal'
 
 
-export default class ModalInfo extends React.Component {
+export default class ModalPrompt extends React.Component {
   static propTypes = {
     isOpen: PropTypes.bool.isRequired,
     onOpenToggle: PropTypes.func.isRequired,
@@ -20,7 +20,7 @@ export default class ModalInfo extends React.Component {
 
   render() {
     return <Modal
-      data-wd-key="modal:info"
+      data-wd-key="modal:prompt"
       isOpen={this.props.isOpen}
       underlayClickExits={false}
       underlayProps={{
@@ -31,8 +31,11 @@ export default class ModalInfo extends React.Component {
     >
       {this.props.message}
       <p className="maputnik-dialog__buttons">
-        <InputButton onClick={this.props.onOpenToggle}>
-          OK
+        <InputButton onClick={() => this.props.onOpenToggle(true)}>
+          Yes
+        </InputButton>
+        <InputButton onClick={() => this.props.onOpenToggle(false)}>
+          No
         </InputButton>
       </p>
     </Modal>

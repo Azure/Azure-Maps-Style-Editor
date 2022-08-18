@@ -627,6 +627,15 @@ class AzureMapsExtension {
     return resultingStyle;
   }
 
+  async getStyleId(styleAlias) {
+    for (const styleMetadata of (await listStyles(this._domain, this._subscriptionKey)).styles) {
+      if (styleMetadata.alias === styleAlias) {
+        return styleMetadata.styleId;
+      }
+    }
+    return "";
+  }
+
   getUpdatedStyle(newStyle) {
     let style = {
       "layers": newStyle.layers.filter(layer => !(layer.metadata && layer.metadata["azmaps:type"] == "baseMap layer"))
@@ -651,13 +660,7 @@ class AzureMapsExtension {
 
     throwIfUserCanceled(canceled)
 
-    let oldStyleId = "";
-    for (const styleMetadata of (await listStyles(this._domain, this._subscriptionKey)).styles) {
-      if (styleMetadata.alias === this._styleAlias) {
-        oldStyleId = styleMetadata.styleId;
-      }
-    }
-
+    const oldStyleId = await this.getStyleId(this._styleAlias);
     const newStyleId = await createStyle(this._domain, this._styleAlias, this._styleDescription, blob, this._subscriptionKey, canceled);
 
     if (oldStyleId) {
@@ -665,6 +668,15 @@ class AzureMapsExtension {
     }
 
     return newStyleId;
+  }
+
+  async getMapConfigurationId(mapConfigurationAlias) {
+    for (const mapConfigurationMetadata of (await listMapConfigurations(this._domain, this._subscriptionKey)).mapConfigurations) {
+      if (mapConfigurationMetadata.alias === mapConfigurationAlias) {
+        return mapConfigurationMetadata.mapConfigurationId;
+      }
+    }
+    return "";
   }
 
   async getUpdatedMapConfiguration(styleId) {
@@ -679,13 +691,7 @@ class AzureMapsExtension {
 
     throwIfUserCanceled(canceled)
 
-    let oldMapConfigurationId = "";
-    for (const mapConfigurationMetadata of (await listMapConfigurations(this._domain, this._subscriptionKey)).mapConfigurations) {
-      if (mapConfigurationMetadata.alias === this._mapConfigurationAlias) {
-        oldMapConfigurationId = mapConfigurationMetadata.mapConfigurationId;
-      }
-    }
-
+    const oldMapConfigurationId = await this.getMapConfigurationId(this._mapConfigurationAlias);
     const newMapConfigurationId = await createMapConfiguration(this._domain, this._mapConfigurationAlias, this._mapConfigurationDescription, blob, this._subscriptionKey, canceled);
 
     if (oldMapConfigurationId) {
