@@ -156,6 +156,11 @@ export default class ModalOpen extends React.Component {
         azMapsMapConfiguration,
         azMapsStyleTupleIndex: "0"
       })
+
+      // If there is just a single style then load it automatically
+      if (azMapsMapConfiguration.styles.length === 1) {
+        this.onSubmitAzureMapsStyle();
+      }
     })
     .catch(err => {
       let errorMessage = 'Failed to load Azure Maps map configuration';
@@ -192,7 +197,7 @@ export default class ModalOpen extends React.Component {
   }
 
   onSubmitAzureMapsStyle = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     this.clearError();
 

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import classnames from 'classnames'
 import {detect} from 'detect-browser';
 
-import {MdFileDownload, MdOpenInBrowser, MdSettings, MdLayers, MdHelpOutline, MdFindInPage, MdAssignmentTurnedIn} from 'react-icons/md'
+import {MdFileDownload, MdOpenInBrowser, MdSave, MdLayers} from 'react-icons/md'
 
 
 import logoImage from 'maputnik-design/logos/logo-color.svg'
@@ -231,8 +231,8 @@ export default class AppToolbar extends React.Component {
             <IconText>Open</IconText>
           </ToolbarAction>
           <ToolbarAction wdKey="nav:export" onClick={this.props.onToggleModal.bind(this, 'export')}>
-            <MdFileDownload />
-            <IconText>Export</IconText>
+            <MdSave />
+            <IconText>Save</IconText>
           </ToolbarAction>
           <ToolbarSelect wdKey="nav:inspect">
             <MdLayers />

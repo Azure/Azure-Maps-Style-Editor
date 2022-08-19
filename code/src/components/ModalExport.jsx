@@ -249,7 +249,7 @@ export default class ModalExport extends React.Component {
           data-wd-key="modal:export"
           isOpen={this.props.isOpen}
           onOpenToggle={() => this.onOpenToggle()}
-          title={'Export style & map configuration'}
+          title={'Upload style & map configuration'}
           className="maputnik-export-modal"
         >
           {errorElement}

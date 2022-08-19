@@ -1,4 +1,5 @@
 import JSZip from 'jszip'
+import cloneDeep from 'lodash.clonedeep'
 
 const apiVersion = "2022-09-01-preview";
 
@@ -6,9 +7,7 @@ const aliasRegex = new RegExp('^[a-zA-Z0-9_-]*$');
 
 const domains = [
   "us.atlas.microsoft.com",
-  "eu.atlas.microsoft.com",
-  "us.t-azmaps.azurelbs.com",
-  "eu.t-azmaps.azurelbs.com"
+  "eu.atlas.microsoft.com"
 ];
 
 const indoorLayers = new Set([
@@ -594,7 +593,7 @@ class AzureMapsExtension {
       maxzoom: tilesetMetadata.maxZoom
     };
 
-    style.layers.forEach(layer => {
+    cloneDeep(style.layers).forEach(layer => {
       // make sure indoor layers are visible
       if ((layer.type !== "fill-extrusion") && layer.metadata && indoorLayers.has(layer.metadata["microsoft.maps:layerGroup"]))
       {
@@ -638,7 +637,7 @@ class AzureMapsExtension {
 
   getUpdatedStyle(newStyle) {
     let style = {
-      "layers": newStyle.layers.filter(layer => !(layer.metadata && layer.metadata["azmaps:type"] == "baseMap layer"))
+      "layers": cloneDeep(newStyle.layers.filter(layer => !(layer.metadata && layer.metadata["azmaps:type"] == "baseMap layer")))
     };
 
     style.layers.forEach(layer => {
