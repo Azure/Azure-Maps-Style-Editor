@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { saveAs } from 'file-saver'
 import FieldString from './FieldString'
 import InputButton from './InputButton'
 import ModalLoading from './ModalLoading'
@@ -87,42 +86,6 @@ export default class ModalExport extends React.Component {
     });
   }
 
-  downloadAzureMapsStyle() {
-    this.props.azureMapsExtension.getUpdatedStyle(this.props.mapStyle)
-    .then((zipBlob) => {
-      saveAs(zipBlob, "azureMapsStyle.zip");
-    })
-  }
-
-  uploadAzureMapsStyle() {
-    this.props.azureMapsExtension.uploadResultingStyle(this.props.mapStyle)
-    .then((styleId) => {
-      this.setState({
-        activeRequest: { abort: () => { } },
-        activeRequestMessage: "Success! The uploaded style has the following ID: " + styleId
-      });
-    })
-    .catch((err) => {
-      this.setState({
-        activeRequest: { abort: () => { } },
-        activeRequestMessage: "Failed uploading the style"
-      });
-      console.error(err);
-    })
-
-    this.setState({
-      activeRequest: { abort: () => { } },
-      activeRequestMessage: "Uploading Azure Maps style..."
-    });
-  }
-
-  downloadAzureMapsMapConfiguration() {
-    this.props.azureMapsExtension.getUpdatedMapConfiguration()
-    .then((zipBlob) => {
-      saveAs(zipBlob, "azureMapsMapConfiguration.zip");
-    })
-  }
-
   onClickUploadAzureMapsMapConfiguration = (e) => {
     e.preventDefault();
 
@@ -182,7 +145,7 @@ export default class ModalExport extends React.Component {
       }
 
       this.setState({
-        activeRequestMessage: "Success! Uploading map configuration..."
+        activeRequestMessage: "Successfully uploaded style! Uploading map configuration..."
       });
 
       resultingStyleId = styleId;

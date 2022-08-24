@@ -103,19 +103,12 @@ export default class MapMapboxGl extends React.Component {
       let target = {};
       if (this.props.mapStyle.center) target.center = this.props.mapStyle.center;
       if (this.props.mapStyle.zoom) target.zoom = this.props.mapStyle.zoom;
-      if (this.props.mapStyle.center || this.props.mapStyle.zoom) this.state.map.easeTo(target);
+      if (this.props.mapStyle.metadata && this.props.mapStyle.metadata["azmaps:bbox"]) {
+        target = this.state.map.cameraForBounds(this.props.mapStyle.metadata["azmaps:bbox"]);
+      }
+      if (target.center || target.zoom) this.state.map.easeTo(target);
       this.props.afterOpenStyleTransition();
     }
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    let should = false;
-    try {
-      should = JSON.stringify(this.props) !== JSON.stringify(nextProps) || JSON.stringify(this.state) !== JSON.stringify(nextState);
-    } catch(e) {
-      // no biggie, carry on
-    }
-    return should;
   }
 
   componentDidUpdate(prevProps) {
@@ -175,6 +168,9 @@ export default class MapMapboxGl extends React.Component {
       const center = map.getCenter();
       const zoom = map.getZoom();
       this.props.onChange({center, zoom});
+      this.setState({
+        zoom: map.getZoom()
+      });
     }
     mapViewChange();
 
@@ -231,12 +227,6 @@ export default class MapMapboxGl extends React.Component {
     map.on("error", e => {
       console.log("ERROR", e);
     })
-
-    map.on("zoom", e => {
-      this.setState({
-        zoom: map.getZoom()
-      });
-    });
 
     map.on("dragend", mapViewChange);
     map.on("zoomend", mapViewChange);

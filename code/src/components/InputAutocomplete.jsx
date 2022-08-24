@@ -50,12 +50,18 @@ export default class InputAutocomplete extends React.Component {
   }
 
   render() {
+    let additionalProps = {};
+    if (this.props.options.length < 2) {
+      additionalProps.disabled = true;
+    }
+
     return <div
       ref={(el) => {
         this.autocompleteMenuEl = el;
       }}
     >
       <Autocomplete
+        {...additionalProps}
         menuStyle={{
           position: "fixed",
           overflow: "auto",

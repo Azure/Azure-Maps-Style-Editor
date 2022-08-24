@@ -85,7 +85,7 @@ async function throwResponseJsonError(response) {
 async function processResponse(response, canceled) {
   throwIfUserCanceled(canceled)
   if (!response.ok) {
-    throwResponseJsonError(response)
+    await throwResponseJsonError(response)
   }
   return response;
 }
@@ -120,7 +120,7 @@ async function uploadStyleArtifact(url, blob, subscriptionKey, canceled) {
   throwIfUserCanceled(canceled)
 
   if (!response.ok || !response.headers.has("operation-location")) {
-    throwResponseJsonError(response)
+    await throwResponseJsonError(response)
   }
 
   const statusUrl = response.headers.get("operation-location");
@@ -135,7 +135,7 @@ async function uploadStyleArtifact(url, blob, subscriptionKey, canceled) {
     console.log(statusResponse.headers)
     throwIfUserCanceled(canceled)
     if (!statusResponse.ok) {
-      throwResponseJsonError(statusResponse)
+      await throwResponseJsonError(statusResponse)
     }
     if (statusResponse.headers.has('resource-location')) {
       const resourceLocation = statusResponse.headers.get('resource-location');
@@ -146,13 +146,13 @@ async function uploadStyleArtifact(url, blob, subscriptionKey, canceled) {
     const jsonResponse = await statusResponse.json();
     if (jsonResponse.status !== "Running")
     {
-      throwResponseJsonError(statusResponse)
+      await throwResponseJsonError(statusResponse)
     }
   }
 }
 
-async function createStyle(domain, alias, description, blob, subscriptionKey, canceled) {
-  return await uploadStyleArtifact(createStyleUrl(domain, alias, description), blob, subscriptionKey, canceled);
+function createStyle(domain, alias, description, blob, subscriptionKey, canceled) {
+  return uploadStyleArtifact(createStyleUrl(domain, alias, description), blob, subscriptionKey, canceled);
 }
 
 async function listStyles(domain, subscriptionKey, canceled) {
@@ -180,8 +180,8 @@ async function deleteStyle(domain, styleName, subscriptionKey, canceled) {
   }), canceled);
 }
 
-async function createMapConfiguration(domain, alias, description, blob, subscriptionKey, canceled) {
-  return await uploadStyleArtifact(createMapConfigurationUrl(domain, alias, description), blob, subscriptionKey, canceled);
+function createMapConfiguration(domain, alias, description, blob, subscriptionKey, canceled) {
+  return uploadStyleArtifact(createMapConfigurationUrl(domain, alias, description), blob, subscriptionKey, canceled);
 }
 
 async function listMapConfigurations(domain, subscriptionKey, canceled) {
@@ -217,12 +217,61 @@ function ensureMapConfigurationValidity(mapConfiguration) {
   return mapConfiguration;
 }
 
-async function loadBaseMapStyle(domain, baseMapStyle, subscriptionKey, canceled) {
-  return processJsonResponse( await fetch(getMapConfigurationStyleUrl(domain, "microsoft-maps:default", baseMapStyles[baseMapStyle]), {
+function checkBaseMapStyleName (name) {
+  let baseMapStyleName = name || "";
+  if (!Object.hasOwn(baseMapStyles, baseMapStyleName)) {
+    baseMapStyleName = "";
+  }
+  return baseMapStyleName;
+}
+
+async function loadBaseMapStyle(domain, baseMapStyleName, subscriptionKey, canceled) {
+  return processJsonResponse( await fetch(getMapConfigurationStyleUrl(domain, "microsoft-maps:default", baseMapStyles[baseMapStyleName]), {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
     credentials: "same-origin"
   }), canceled);
+}
+
+async function updateBaseMapForStyle(baseMapStyleName, style, domain, subscriptionKey) {
+  // Remove all existing base map sources and layers
+  let usedSources = new Set();
+  style.layers = style.layers.filter(layer => {
+    if (layer.metadata && layer.metadata["azmaps:type"] === "baseMap layer") {
+      usedSources.add(layer.source);
+      return false;
+    }
+    return true;
+  });
+  for (const source of Object.keys(style.sources)) {
+    if (usedSources.has(source)) {
+      delete style.sources[source];
+    }
+  }
+
+  baseMapStyleName = checkBaseMapStyleName(baseMapStyleName);
+  usedSources = new Set();
+  if (baseMapStyleName) {
+
+    // Load base map style
+    let baseMapStyle = await loadBaseMapStyle(domain, baseMapStyleName, subscriptionKey);
+    baseMapStyle.layers.forEach(layer => {
+      layer.metadata = { "azmaps:type": "baseMap layer", ...layer.metadata };
+      usedSources.add(layer.source);
+    });
+
+    // Add used sources to the style
+    usedSources.forEach(source => {
+      if (source && Object.hasOwn(baseMapStyle.sources, source)) {
+        style.sources[source] = baseMapStyle.sources[source];
+      }
+    });
+
+    // Add base map layers at the beginning of style layers
+    style.layers = baseMapStyle.layers.concat(style.layers);
+  }
+
+  return style;
 }
 
 class AzureMapsStyle {
@@ -233,6 +282,8 @@ class AzureMapsStyle {
     this._jsonFileName = "";
     this._spriteSheets = {};
   }
+
+  get json() { return this._json; }
 
   get layers() { return this._json?.layers; }
 
@@ -561,36 +612,27 @@ class AzureMapsExtension {
       }
     }
 
-    // Check base map
-    let baseMap = styleTupleDetails.style.baseMap ?? "";
-    if (!Object.hasOwn(baseMapStyles, baseMap)) {
-      baseMap = "";
-    }
-
     let resultingStyle = {
       "version": 8,
-      "name": mapConfiguration.styleTuples[parseInt(styleTupleIndex)],
+      "name": cloneDeep(style.json.name) || mapConfiguration.styleTuples[parseInt(styleTupleIndex)],
       "sources": {},
+      "sprite": fakeDomainForSprite,
       "glyphs": "https://" + domain + "/styles/glyphs/{fontstack}/{range}.pbf",
-      "layers": []
+      "layers": [],
+      "metadata": {
+        "azmaps:type": "Azure Maps style",
+        "azmaps:bbox": tilesetMetadata?.bbox,
+        "azmaps:minZoom": tilesetMetadata?.minZoom,
+        "azmaps:maxZoom": tilesetMetadata?.maxZoom,
+        ...cloneDeep(style.json.metadata)
+      }
     };
-
-    if (baseMap) {
-      resultingStyle = await loadBaseMapStyle(domain, baseMap, subscriptionKey);
-      resultingStyle.layers.forEach(layer => layer.metadata = { "azmaps:type": "baseMap layer", ...layer.metadata });
-    }
-
-    resultingStyle.metadata = {
-      "azmaps:type": "Azure Maps style",
-      ...resultingStyle.metadata
-    };
-    resultingStyle.sprite = fakeDomainForSprite;
 
     resultingStyle.sources[tilesetName] = {
       type: "vector",
       tiles: [ "https://" + domain + "/map/tile?api-version=2.0&tilesetId=" + tilesetName + "&zoom={z}&x={x}&y={y}" ],
-      minzoom: tilesetMetadata.minZoom,
-      maxzoom: tilesetMetadata.maxZoom
+      minzoom: tilesetMetadata?.minZoom,
+      maxzoom: tilesetMetadata?.maxZoom
     };
 
     cloneDeep(style.layers).forEach(layer => {
@@ -603,10 +645,12 @@ class AzureMapsExtension {
       resultingStyle.layers.push(layer);
     });
 
-    resultingStyle.center = [
-      (tilesetMetadata.bbox[0] + tilesetMetadata.bbox[2]) / 2,
-      (tilesetMetadata.bbox[1] + tilesetMetadata.bbox[3]) / 2 ];
-    resultingStyle.zoom = (tilesetMetadata.minZoom + tilesetMetadata.maxZoom) / 2;
+    // Apply base map
+    let baseMap = styleTupleDetails.style.baseMap || "";
+    if (!Object.hasOwn(baseMapStyles, baseMap)) {
+      baseMap = "";
+    }
+    resultingStyle = await updateBaseMapForStyle(baseMap, resultingStyle, domain, subscriptionKey);
 
     if (canceled) return null;
 
@@ -626,28 +670,45 @@ class AzureMapsExtension {
     return resultingStyle;
   }
 
+  async updateBaseMap(newBaseMapStyleName, style) {
+    const baseMapStyleName = checkBaseMapStyleName(newBaseMapStyleName);
+    const resultingStyle = await updateBaseMapForStyle(baseMapStyleName, style, this._domain, this._subscriptionKey);
+    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { baseMapStyleName });
+    this._baseMap = baseMapStyleName;
+    return resultingStyle;
+  }
+
   async getStyleId(styleAlias) {
-    for (const styleMetadata of (await listStyles(this._domain, this._subscriptionKey)).styles) {
-      if (styleMetadata.alias === styleAlias) {
-        return styleMetadata.styleId;
+    if (styleAlias) {
+      for (const styleMetadata of (await listStyles(this._domain, this._subscriptionKey)).styles) {
+        if (styleMetadata.alias === styleAlias) {
+          return styleMetadata.styleId;
+        }
       }
     }
     return "";
   }
 
   getUpdatedStyle(newStyle) {
-    let style = {
-      "layers": cloneDeep(newStyle.layers.filter(layer => !(layer.metadata && layer.metadata["azmaps:type"] == "baseMap layer")))
-    };
-
+    let style = cloneDeep(newStyle);
+    if (style.version) delete style.version;
+    if (style.glyphs) delete style.glyphs;
+    if (style.sprite) delete style.sprite;
+    if (style.sources) delete style.sources;
+    let layers = [];
     style.layers.forEach(layer => {
+      if (layer.metadata && layer.metadata["azmaps:type"] == "baseMap layer") return;
+
       // make sure indoor layers are hidden
       if ((layer.type !== "fill-extrusion") && layer.metadata && indoorLayers.has(layer.metadata["microsoft.maps:layerGroup"]))
       {
         layer.layout.visibility = "none"
       }
       delete layer.source;
+
+      layers.push(layer);
     });
+    style.layers = layers;
 
     return this._style.updateAndGenerateZip(style);
   }
@@ -670,16 +731,18 @@ class AzureMapsExtension {
   }
 
   async getMapConfigurationId(mapConfigurationAlias) {
-    for (const mapConfigurationMetadata of (await listMapConfigurations(this._domain, this._subscriptionKey)).mapConfigurations) {
-      if (mapConfigurationMetadata.alias === mapConfigurationAlias) {
-        return mapConfigurationMetadata.mapConfigurationId;
+    if (mapConfigurationAlias) {
+      for (const mapConfigurationMetadata of (await listMapConfigurations(this._domain, this._subscriptionKey)).mapConfigurations) {
+        if (mapConfigurationMetadata.alias === mapConfigurationAlias) {
+          return mapConfigurationMetadata.mapConfigurationId;
+        }
       }
     }
     return "";
   }
 
   async getUpdatedMapConfiguration(styleId) {
-    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { styleId: this._styleAlias ?? styleId });
+    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { styleId: this._styleAlias || styleId });
     return this._mapConfiguration.generateZip();
   }
 

@@ -21,16 +21,8 @@ export default class ModalShortcuts extends React.Component {
         text: "Open modal"
       },
       {
-        key: <kbd>e</kbd>,
-        text: "Export modal"
-      },
-      {
-        key: <kbd>d</kbd>,
-        text: "Data Sources modal"
-      },
-      {
         key: <kbd>s</kbd>,
-        text: "Style Settings modal"
+        text: "Save modal"
       },
       {
         key: <kbd>i</kbd>,

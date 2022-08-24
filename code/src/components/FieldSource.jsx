@@ -23,7 +23,6 @@ export default class FieldSource extends React.Component {
     return <Block
       label={"Source"}
       fieldSpec={latest.layer.source}
-      error={this.props.error}
       data-wd-key={this.props.wdKey}
     >
       <InputAutocomplete
