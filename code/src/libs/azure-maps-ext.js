@@ -673,7 +673,7 @@ class AzureMapsExtension {
   async updateBaseMap(newBaseMapStyleName, style) {
     const baseMapStyleName = checkBaseMapStyleName(newBaseMapStyleName);
     const resultingStyle = await updateBaseMapForStyle(baseMapStyleName, style, this._domain, this._subscriptionKey);
-    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { baseMapStyleName });
+    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { newBaseMap: baseMapStyleName });
     this._baseMap = baseMapStyleName;
     return resultingStyle;
   }
