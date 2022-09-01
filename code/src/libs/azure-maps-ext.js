@@ -6,8 +6,8 @@ const apiVersion = "2022-09-01-preview";
 const aliasRegex = new RegExp('^[a-zA-Z0-9_-]*$');
 
 const domains = [
-  "us.atlas.microsoft.com",
-  "eu.atlas.microsoft.com"
+  [ "us.atlas.microsoft.com", "United States" ],
+  [ "eu.atlas.microsoft.com", "Europe" ]
 ];
 
 const indoorLayers = new Set([
@@ -78,7 +78,7 @@ function throwIfBadAlias(alias) {
 async function throwResponseJsonError(response) {
   let err = new Error('Response is not OK. Check console');
   err.response = await response.json();
-  console.log(err.response);
+  console.error(err.response);
   throw err;
 }
 
@@ -104,7 +104,8 @@ async function getTilesetMetadata(domain, tilesetId, subscriptionKey, canceled) 
   return processJsonResponse( await fetch(getTilesetMetadataUrl(domain, tilesetId), {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -114,7 +115,8 @@ async function uploadStyleArtifact(url, blob, subscriptionKey, canceled) {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
     credentials: "same-origin",
-    body: blob
+    body: blob,
+    cache: "reload"
   });
 
   throwIfUserCanceled(canceled)
@@ -129,10 +131,9 @@ async function uploadStyleArtifact(url, blob, subscriptionKey, canceled) {
     let statusResponse = await fetch(statusUrl, {
       mode: 'cors',
       headers: {'subscription-key': subscriptionKey},
-      credentials: "same-origin"
+      credentials: "same-origin",
+      cache: "reload"
     });
-    console.log(statusResponse);
-    console.log(statusResponse.headers)
     throwIfUserCanceled(canceled)
     if (!statusResponse.ok) {
       await throwResponseJsonError(statusResponse)
@@ -159,7 +160,8 @@ async function listStyles(domain, subscriptionKey, canceled) {
   return processJsonResponse( await fetch(listStylesUrl(domain), {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -167,7 +169,8 @@ async function getStyle(domain, styleName, subscriptionKey, canceled) {
   return processBlobResponse( await fetch(getStyleUrl(domain, styleName), {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -176,7 +179,8 @@ async function deleteStyle(domain, styleName, subscriptionKey, canceled) {
     method: 'DELETE',
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -188,7 +192,8 @@ async function listMapConfigurations(domain, subscriptionKey, canceled) {
   return processJsonResponse( await fetch(listMapConfigurationsUrl(domain), {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -196,7 +201,8 @@ async function getMapConfiguration(domain, mapConfigurationName, subscriptionKey
   return processBlobResponse( await fetch(getMapConfigurationUrl(domain, mapConfigurationName), {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -205,7 +211,8 @@ async function deleteMapConfiguration(domain, mapConfigurationName, subscription
     method: 'DELETE',
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -229,7 +236,8 @@ async function loadBaseMapStyle(domain, baseMapStyleName, subscriptionKey, cance
   return processJsonResponse( await fetch(getMapConfigurationStyleUrl(domain, "microsoft-maps:default", baseMapStyles[baseMapStyleName]), {
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin"
+    credentials: "same-origin",
+    cache: "reload"
   }), canceled);
 }
 
@@ -485,7 +493,7 @@ class AzureMapsExtension {
 
   constructor() {
     this._subscriptionKey = "";
-    this._domain = domains[0];
+    this._domain = domains[0][0];
     this._mapConfigurationList = defaultMapConfigurationList;
     this._mapConfigurationName = "";
     this._mapConfiguration = new AzureMapsMapConfiguration();
@@ -534,11 +542,6 @@ class AzureMapsExtension {
   set mapConfigurationDescription(newMapConfigurationDescription) { this._mapConfigurationDescription = newMapConfigurationDescription; }
 
   get baseMap() { return this._baseMap; }
-  set baseMap(newBaseMap) {
-    if (!Object.hasOwn(baseMapStyles, newBaseMap)) return;
-    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { newBaseMap });
-    this._baseMap = newBaseMap;
-  }
 
   get requestHeaders() { return this._styleTupleIndex ? { 'subscription-key': this._subscriptionKey } : {}; }
 
@@ -646,10 +649,7 @@ class AzureMapsExtension {
     });
 
     // Apply base map
-    let baseMap = styleTupleDetails.style.baseMap || "";
-    if (!Object.hasOwn(baseMapStyles, baseMap)) {
-      baseMap = "";
-    }
+    const baseMap = checkBaseMapStyleName(styleTupleDetails.style.baseMap);
     resultingStyle = await updateBaseMapForStyle(baseMap, resultingStyle, domain, subscriptionKey);
 
     if (canceled) return null;
@@ -666,7 +666,7 @@ class AzureMapsExtension {
     this._styleAlias = styleAlias;
     this._styleDescription = styleDescription;
     this._tilesetMetadata = tilesetMetadata;
-    this._baseMap = baseMap;
+    this._baseMap = baseMap || "blank";
     return resultingStyle;
   }
 
@@ -674,7 +674,7 @@ class AzureMapsExtension {
     const baseMapStyleName = checkBaseMapStyleName(newBaseMapStyleName);
     const resultingStyle = await updateBaseMapForStyle(baseMapStyleName, style, this._domain, this._subscriptionKey);
     this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { newBaseMap: baseMapStyleName });
-    this._baseMap = baseMapStyleName;
+    this._baseMap = baseMapStyleName || "blank";
     return resultingStyle;
   }
 

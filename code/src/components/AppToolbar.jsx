@@ -144,6 +144,10 @@ export default class AppToolbar extends React.Component {
   render() {
     const baseMaps = [
       {
+        id: "blank",
+        title: "(no base map)"
+      },
+      {
         id: "microsoft_light",
         title: "Microsoft light (road)"
       },
@@ -216,7 +220,7 @@ export default class AppToolbar extends React.Component {
             className="maputnik-toolbar-logo"
             target="blank"
             rel="noreferrer noopener"
-            href="https://github.com/maputnik/editor"
+            href="https://github.com/azure/Azure-Maps-Style-Editor"
           >
             <span dangerouslySetInnerHTML={{__html: logoImage}} />
             <h1>

@@ -167,7 +167,7 @@ export default class LayerEditor extends React.Component {
             changeType(this.props.layer, newType)
           )}
         />
-        {this.props.layer.type !== 'background' && <FieldSource
+        {this.props.layer.type !== 'background' && this.props.sources.length > 1 && <FieldSource
           error={errorData.source}
           sourceIds={Object.keys(this.props.sources)}
           value={this.props.layer.source}

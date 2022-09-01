@@ -140,50 +140,6 @@ class LayerListContainer extends React.Component {
     return collapsed === undefined ? true : collapsed
   }
 
-  shouldComponentUpdate (nextProps, nextState) {
-    // Always update on state change
-    if (this.state !== nextState) {
-      return true;
-    }
-
-    // This component tree only requires id and visibility from the layers
-    // objects
-    function getRequiredProps (layer) {
-      const out = {
-        id: layer.id,
-      };
-
-      if (layer.layout) {
-        out.layout = {
-          visibility: layer.layout.visibility
-        };
-      }
-      return out;
-    }
-    const layersEqual = lodash.isEqual(
-      nextProps.layers.map(getRequiredProps),
-      this.props.layers.map(getRequiredProps),
-    );
-
-    function withoutLayers (props) {
-      const out = {
-        ...props
-      };
-      delete out['layers'];
-      return out;
-    }
-
-    // Compare the props without layers because we've already compared them
-    // efficiently above.
-    const propsEqual = lodash.isEqual(
-      withoutLayers(this.props),
-      withoutLayers(nextProps)
-    );
-
-    const propsChanged = !(layersEqual && propsEqual);
-    return propsChanged;
-  }
-
   componentDidUpdate (prevProps) {
     if (prevProps.selectedLayerIndex !== this.props.selectedLayerIndex) {
       const selectedItemNode = this.selectedItemRef.current;

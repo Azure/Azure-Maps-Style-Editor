@@ -48,9 +48,9 @@ export default class ModalAdd extends React.Component {
       id: '',
     }
 
-    if(props.sources.length > 0) {
-      this.state.source = Object.keys(this.props.sources)[0]
-      this.state['source-layer'] = this.props.sources[this.state.source][0]
+    if(Object.keys(props.sources).length > 0) {
+      this.state.source = Object.keys(props.sources)[0]
+      this.state['source-layer'] = props.sources[this.state.source].layers?.at(0)
     }
   }
 
@@ -62,19 +62,28 @@ export default class ModalAdd extends React.Component {
     const availableSourcesOld = this.getSources(oldType);
     const availableSourcesNew = this.getSources(newType);
 
-    if(
-      // Type has changed
-      oldType !== newType
-      && prevState.source !== ""
-      // Was a valid source previously
-      && availableSourcesOld.indexOf(prevState.source) > -1
-      // And is not a valid source now
-      && availableSourcesNew.indexOf(this.state.source) < 0
-    ) {
-      // Clear the source
-      this.setState({
-        source: ""
-      });
+    if (!this.state.source) {
+      if(Object.keys(this.props.sources).length > 0) {
+        this.setState({
+          source: Object.keys(this.props.sources)[0],
+          'source-layer': this.props.sources[Object.keys(this.props.sources)[0]].layers?.at(0)
+        });
+      }
+    } else {
+      if(
+        // Type has changed
+        oldType !== newType
+        && prevState.source !== ""
+        // Was a valid source previously
+        && availableSourcesOld.indexOf(prevState.source) > -1
+        // And is not a valid source now
+        && availableSourcesNew.indexOf(this.state.source) < 0
+      ) {
+        // Clear the source
+        this.setState({
+          source: ""
+        });
+      }
     }
   }
 
@@ -144,7 +153,7 @@ export default class ModalAdd extends React.Component {
         wdKey="add-layer.layer-type"
         onChange={v => this.setState({ type: v })}
       />
-      {this.state.type !== 'background' &&
+      {this.state.type !== 'background' && sources.length > 1 &&
       <FieldSource
         sourceIds={sources}
         wdKey="add-layer.layer-source-block"

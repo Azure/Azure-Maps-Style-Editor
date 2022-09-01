@@ -16,30 +16,33 @@ export default class FieldFont extends React.Component {
     fonts: []
   }
 
-  get values() {
-    const out = this.props.value || this.props.default || [];
-
-    // Always put a "" in the last field to you can keep adding entries
-    if (out[out.length-1] !== ""){
-      return out.concat("");
-    }
-    else {
-      return out;
+  constructor(props) {
+    super(props)
+    this.state = {
+      values: this.props.value || this.props.default || []
     }
   }
 
   changeFont(idx, newValue) {
-    const changedValues = this.values.slice(0)
+    const changedValues = this.state.values.slice(0)
     changedValues[idx] = newValue
     const filteredValues = changedValues
       .filter(v => v !== undefined)
       .filter(v => v !== "")
 
-    this.props.onChange(filteredValues);
+    if (filteredValues.length) {
+      if (this.props.fonts.indexOf(filteredValues[0]) > -1) {
+        this.props.onChange(filteredValues);
+      }
+    }
+
+    this.setState({
+      values: changedValues
+    })
   }
 
   render() {
-    const inputs = this.values.map((value, i) => {
+    const inputs = this.state.values.map((value, i) => {
       return <li
         key={i}
       >

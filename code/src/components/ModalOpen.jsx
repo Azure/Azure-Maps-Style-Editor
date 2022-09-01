@@ -89,13 +89,17 @@ export default class ModalOpen extends React.Component {
       });
 
       const mapConfigurationList = azureMapsExt.ensureMapConfigurationListValidity(body)
-      console.log('Loaded Azure Maps map configuration list with ' + mapConfigurationList.mapConfigurations.length + ' entries.')
 
       this.setState({
         azMapsMapConfigurationList: mapConfigurationList.mapConfigurations,
         azMapsMapConfigurationName: mapConfigurationList.mapConfigurations.length ? mapConfigurationList.mapConfigurations[0].alias || mapConfigurationList.mapConfigurations[0].mapConfigurationId : "",
         azMapsStyleTupleIndex: ""
       })
+
+      // If there is just a single map configuration then load it automatically
+      if (mapConfigurationList.mapConfigurations.length === 1) {
+        this.onSubmitAzureMapsMapConfiguration();
+      }
     })
     .catch(err => {
       let errorMessage = 'Failed to load Azure Maps map configuration list';
@@ -133,7 +137,7 @@ export default class ModalOpen extends React.Component {
   }
 
   onSubmitAzureMapsMapConfiguration = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     this.clearError();
 
@@ -149,8 +153,6 @@ export default class ModalOpen extends React.Component {
         activeRequest: null,
         activeRequestMessage: ""
       });
-
-      console.log('Loaded Azure Maps map configuration ' + this.state.azMapsMapConfigurationName + ' with ' + azMapsMapConfiguration.styles.length + ' styles.')
 
       this.setState({
         azMapsMapConfiguration,
@@ -202,8 +204,6 @@ export default class ModalOpen extends React.Component {
     this.clearError();
 
     let canceled;
-
-    console.log('Loading Azure Maps style tuple: ' + this.state.azMapsMapConfiguration.styleTuples[parseInt(this.state.azMapsStyleTupleIndex)])
 
     this.props.azureMapsExtension.createResultingStyle(
       this.state.azMapsKey,
@@ -280,7 +280,7 @@ export default class ModalOpen extends React.Component {
             <form onSubmit={this.onSubmitAzureMapsMapConfigurationList}>
               <div className="maputnik-style-gallery-container">
                 <p>
-                  Enter your Azure Maps subscription key.
+                  Enter your Azure Maps subscription key
                 </p>
                 <InputString
                   aria-label="Azure Maps subscription key for now. RBAC access will be implemented later."
@@ -293,12 +293,12 @@ export default class ModalOpen extends React.Component {
                 />
 
                 <p>
-                  Select domain associated with your subscription key.
+                  Select the geography of your Azure Maps Creator resource
                 </p>
                 <InputSelect
                   aria-label="Azure Maps domain associated with the subscription."
                   data-wd-key="modal:open.azuremaps.domain" 
-                  options={this.props.azureMapsExtension.domains.map(domain => [domain, domain])}
+                  options={this.props.azureMapsExtension.domains}
                   value={this.state.azMapsDomain}
                   onChange={this.onChangeAzureMapsDomain}
                 />

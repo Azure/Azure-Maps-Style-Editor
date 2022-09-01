@@ -32,8 +32,8 @@ class IconAction extends React.Component {
   renderIcon() {
     switch(this.props.action) {
       case 'duplicate': return <MdContentCopy />
-      case 'show': return <MdVisibility />
-      case 'hide': return <MdVisibilityOff />
+      case 'show': return <MdVisibilityOff />
+      case 'hide': return <MdVisibility />
       case 'delete': return <MdDelete />
     }
   }
@@ -97,7 +97,7 @@ class LayerListItem extends React.Component {
   }
 
   render() {
-    const visibilityAction = this.props.visibility === 'visible' ? 'show' : 'hide';
+    const visibilityAction = this.props.visibility === 'none' ? 'show' : 'hide';
 
     return <li
       id={this.props.id}

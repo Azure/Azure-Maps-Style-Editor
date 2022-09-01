@@ -323,7 +323,7 @@ export default class App extends React.Component {
     };
 
     let newSelectedLayerIndex = 0;
-    const selectedLayerId = this.state.selectableLayers[this.state.selectedLayerIndex]?.id || "";
+    const selectedLayerId = opts.newSelectedLayerId || this.state.selectableLayers[this.state.selectedLayerIndex]?.id || "";
 
     if (opts.initialLoad) {
       this.getInitialStateFromUrl(newStyle);
@@ -463,6 +463,7 @@ export default class App extends React.Component {
       dirtyMapStyle: dirtyMapStyle,
       selectableLayers: selectableLayers,
       selectedLayerIndex: newSelectedLayerIndex,
+      selectedLayerOriginalId: selectedLayerId,
       openStyleTransition: opts.openStyleTransition,
       errors: mappedErrors,
     }, () => {
@@ -543,34 +544,58 @@ export default class App extends React.Component {
   }
 
   onLayerVisibilityToggle = (index) => {
-    let layers = this.state.selectableLayers;
-    const changedLayers = layers.slice(0)
-
-    const layer = { ...changedLayers[index] }
-    const changedLayout = 'layout' in layer ? {...layer.layout} : {}
-    changedLayout.visibility = changedLayout.visibility === 'none' ? 'visible' : 'none'
-
-    layer.layout = changedLayout
-    changedLayers[index] = layer
-    this.onLayersChange(changedLayers)
+    let selectableLayerIndex = 0;
+    const changedStyle = {...this.state.mapStyle}
+    changedStyle.layers.forEach(layer => {
+      if (isLayerSelectable(layer)) {
+        if (selectableLayerIndex == index) {
+          const changedLayout = 'layout' in layer ? layer.layout : {}
+          changedLayout.visibility = changedLayout.visibility !== 'none' ? 'none' : 'visible'
+          layer.layout = changedLayout
+        }
+        ++selectableLayerIndex;
+      }
+    })
+    this.onStyleChanged(changedStyle)
   }
 
 
   onLayerIdChange = (index, oldId, newId) => {
-    const changedLayers = this.state.selectableLayers.slice(0)
-    changedLayers[index] = {
-      ...changedLayers[index],
-      id: newId
-    }
-
-    this.onLayersChange(changedLayers)
+    const opts = {};
+    let selectableLayerIndex = 0;
+    const changedStyle = {...this.state.mapStyle}
+    changedStyle.layers.forEach(layer => {
+      if (isLayerSelectable(layer)) {
+        if (selectableLayerIndex == index) {
+          if (this.state.selectedLayerOriginalId == layer.id) {
+            opts.newSelectedLayerId = newId
+          }
+          layer.id = newId
+        }
+        ++selectableLayerIndex;
+      }
+    })
+    this.onStyleChanged(changedStyle, opts)
   }
 
-  onLayerChanged = (index, layer) => {
-    const changedLayers = this.state.selectableLayers.slice(0)
-    changedLayers[index] = layer
-
-    this.onLayersChange(changedLayers)
+  onLayerChanged = (index, newLayer) => {
+    const opts = {};
+    let selectableLayerIndex = 0;
+    let changedLayerIndex = 0;
+    const changedStyle = {...this.state.mapStyle}
+    changedStyle.layers.forEach((layer, layerIndex) => {
+      if (isLayerSelectable(layer)) {
+        if (selectableLayerIndex == index) {
+          if (this.state.selectedLayerOriginalId == layer.id) {
+            opts.newSelectedLayerId = newLayer.id
+          }
+          changedLayerIndex = layerIndex
+        }
+        ++selectableLayerIndex;
+      }
+    })
+    changedStyle.layers[changedLayerIndex] = newLayer
+    this.onStyleChanged(changedStyle, opts)
   }
 
   setMapState = (newState) => {
@@ -791,22 +816,24 @@ export default class App extends React.Component {
   }
 
   getInitialStateFromUrl = (mapStyle) => {
+    // Let's show "Open" modal at first to get Azure Maps subscription key
+    const modalObj = {"open": true};
+
     const url = new URL(location.href);
     const modalParam = url.searchParams.get("modal");
     if (modalParam && modalParam !== "") {
       const modals = modalParam.split(",");
-      const modalObj = {};
       modals.forEach(modalName => {
         modalObj[modalName] = true;
       });
-
-      this.setState({
-        isOpen: {
-          ...this.state.isOpen,
-          ...modalObj,
-        }
-      });
     }
+
+    this.setState({
+      isOpen: {
+        ...this.state.isOpen,
+        ...modalObj,
+      }
+    });
 
     const view = url.searchParams.get("view");
     if (view && view !== "") {

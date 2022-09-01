@@ -13,7 +13,7 @@ const defaultStyleUrl = publicSources[0].url
 
 // Fetch a default style via URL and return it or a fallback style via callback
 export function loadDefaultStyle(cb) {
-  loadStyleUrl(defaultStyleUrl, cb)
+  cb(style.emptyStyle)
 }
 
 // Return style ids and dates of all styles stored in local storage
