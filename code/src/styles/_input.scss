@@ -30,6 +30,11 @@
     background: transparent;
     border: none;
   }
+
+  &--error {
+    border: solid 1px $color-red;
+    border-radius: 2px;
+  }
 }
 
 .maputnik-number-container {

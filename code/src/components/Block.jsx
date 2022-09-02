@@ -19,7 +19,6 @@ export default class Block extends React.Component {
     onChange: PropTypes.func,
     fieldSpec: PropTypes.object,
     wideMode: PropTypes.bool,
-    error: PropTypes.array,
   }
 
   constructor (props) {

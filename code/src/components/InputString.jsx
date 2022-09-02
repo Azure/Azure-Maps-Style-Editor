@@ -14,6 +14,7 @@ export default class InputString extends React.Component {
     disabled: PropTypes.bool,
     spellCheck: PropTypes.bool,
     'aria-label': PropTypes.string,
+    error: PropTypes.string
   }
 
   static defaultProps = {
@@ -57,6 +58,10 @@ export default class InputString extends React.Component {
 
     if(!!this.props.disabled) {
       classes.push("maputnik-string--disabled");
+    }
+
+    if(!!this.props.error) {
+      classes.push("maputnik-string--error")
     }
 
     return React.createElement(tag, {

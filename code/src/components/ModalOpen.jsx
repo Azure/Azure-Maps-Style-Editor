@@ -24,6 +24,7 @@ export default class ModalOpen extends React.Component {
       azMapsKey: props.azureMapsExtension.subscriptionKey,
       azMapsDomain: props.azureMapsExtension.domain,
       azMapsMapConfigurationList: props.azureMapsExtension.mapConfigurationList.mapConfigurations,
+      azMapsMapConfigurationListOptions: [],
       azMapsMapConfigurationName: props.azureMapsExtension.mapConfigurationName,
       azMapsMapConfiguration: props.azureMapsExtension.mapConfiguration,
       azMapsStyleTupleIndex: props.azureMapsExtension.styleTupleIndex
@@ -88,11 +89,18 @@ export default class ModalOpen extends React.Component {
         activeRequestMessage: ""
       });
 
-      const mapConfigurationList = azureMapsExt.ensureMapConfigurationListValidity(body)
+      const mapConfigurationList = azureMapsExt.ensureMapConfigurationListValidity(body);
+
+      const mapConfigurationListOptions = mapConfigurationList.mapConfigurations.map(mapConfig => {
+        return (!mapConfig.alias || mapConfig.alias.startsWith("default")) ? [mapConfig.mapConfigurationId, mapConfig.mapConfigurationId] : [mapConfig.mapConfigurationId, mapConfig.alias];
+      });
+
+      const mapConfigurationName = mapConfigurationListOptions.length ? mapConfigurationListOptions[0][0] : "";
 
       this.setState({
         azMapsMapConfigurationList: mapConfigurationList.mapConfigurations,
-        azMapsMapConfigurationName: mapConfigurationList.mapConfigurations.length ? mapConfigurationList.mapConfigurations[0].alias || mapConfigurationList.mapConfigurations[0].mapConfigurationId : "",
+        azMapsMapConfigurationListOptions: mapConfigurationListOptions,
+        azMapsMapConfigurationName: mapConfigurationName,
         azMapsStyleTupleIndex: ""
       })
 
@@ -321,7 +329,7 @@ export default class ModalOpen extends React.Component {
                   <InputSelect
                     aria-label="Azure Maps map configuration list."
                     data-wd-key="modal:open.azuremaps.style_set_list" 
-                    options={this.state.azMapsMapConfigurationList.map(mapConfiguration => [mapConfiguration.alias || mapConfiguration.mapConfigurationId, mapConfiguration.alias || mapConfiguration.mapConfigurationId] )}
+                    options={this.state.azMapsMapConfigurationListOptions}
                     value={this.state.azMapsMapConfigurationName}
                     onChange={this.onChangeAzureMapsMapConfigurationName}
                   />
