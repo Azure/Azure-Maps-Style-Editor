@@ -122,6 +122,8 @@ export default class App extends React.Component {
           this.toggleModal("export");
         }
       },
+      /*
+      // @TODO Disabled for now as we don't document this.
       {
         key: "i",
         handler: () => {
@@ -130,6 +132,7 @@ export default class App extends React.Component {
           );
         }
       },
+      */
       {
         key: "m",
         handler: () => {

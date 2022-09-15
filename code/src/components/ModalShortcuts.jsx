@@ -14,29 +14,32 @@ export default class ModalShortcuts extends React.Component {
     const help = [
       {
         key: <kbd>?</kbd>,
-        text: "Shortcuts menu"
+        text: "Shortcuts menu",
       },
       {
         key: <kbd>o</kbd>,
-        text: "Open modal"
+        text: "Open modal",
       },
       {
         key: <kbd>s</kbd>,
-        text: "Save modal"
+        text: "Save modal",
       },
+      /*
+      // @TODO Disabled for now as we don't document this
       {
         key: <kbd>i</kbd>,
         text: "Toggle inspect"
       },
+      */
       {
         key: <kbd>m</kbd>,
-        text: "Focus map"
+        text: "Focus map",
       },
       {
         key: <kbd>!</kbd>,
-        text: "Debug modal"
+        text: "Debug modal",
       },
-    ]
+    ];
 
 
     const mapShortcuts = [
