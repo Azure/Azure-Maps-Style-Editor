@@ -122,6 +122,8 @@ export default class App extends React.Component {
           this.toggleModal("export");
         }
       },
+      /*
+      // @TODO Disabled for now as we don't document this.
       {
         key: "i",
         handler: () => {
@@ -130,6 +132,7 @@ export default class App extends React.Component {
           );
         }
       },
+      */
       {
         key: "m",
         handler: () => {
@@ -463,7 +466,6 @@ export default class App extends React.Component {
       dirtyMapStyle: dirtyMapStyle,
       selectableLayers: selectableLayers,
       selectedLayerIndex: newSelectedLayerIndex,
-      selectedLayerOriginalId: selectedLayerId,
       openStyleTransition: opts.openStyleTransition,
       errors: mappedErrors,
     }, () => {
@@ -562,20 +564,24 @@ export default class App extends React.Component {
 
   onLayerIdChange = (index, oldId, newId) => {
     const opts = {};
+    const changedStyle = { ...this.state.mapStyle };
+
     let selectableLayerIndex = 0;
-    const changedStyle = {...this.state.mapStyle}
+
     changedStyle.layers.forEach(layer => {
-      if (isLayerSelectable(layer)) {
-        if (selectableLayerIndex == index) {
-          if (this.state.selectedLayerOriginalId == layer.id) {
-            opts.newSelectedLayerId = newId
-          }
-          layer.id = newId
+      if (!isLayerSelectable(layer)) return;
+
+      if (selectableLayerIndex === index) {
+        if (this.state.selectedLayerOriginalId === layer.id) {
+          opts.newSelectedLayerId = newId;
         }
-        ++selectableLayerIndex;
+        layer.id = newId;
       }
-    })
-    this.onStyleChanged(changedStyle, opts)
+
+      selectableLayerIndex++;
+    });
+
+    this.onStyleChanged(changedStyle, opts);
   }
 
   onLayerChanged = (index, newLayer) => {

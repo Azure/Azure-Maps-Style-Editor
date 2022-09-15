@@ -3,5 +3,5 @@ export function formatLayerId (id) {
 }
 
 export function isLayerSelectable(layer) {
-  return !(layer.metadata && layer.metadata["azmaps:type"] == "baseMap layer");
+  return !(layer.metadata && layer.metadata["azmaps:type"] === "baseMap layer");
 }
