@@ -27,7 +27,7 @@ export default class ModalOpen extends React.Component {
       azMapsMapConfigurationListOptions: [],
       azMapsMapConfigurationName: props.azureMapsExtension.mapConfigurationName,
       azMapsMapConfiguration: props.azureMapsExtension.mapConfiguration,
-      azMapsStyleTupleIndex: props.azureMapsExtension.styleTupleIndex
+      azMapsConfigTupleIndex: props.azureMapsExtension.configTupleIndex
     };
   }
 
@@ -59,7 +59,7 @@ export default class ModalOpen extends React.Component {
     this.setState({
       azMapsKey: key,
       azMapsMapConfigurationName: "",
-      azMapsStyleTupleIndex: ""
+      azMapsConfigTupleIndex: ""
     })
   }
 
@@ -67,7 +67,7 @@ export default class ModalOpen extends React.Component {
     this.setState({
       azMapsDomain: domain,
       azMapsMapConfigurationName: "",
-      azMapsStyleTupleIndex: ""
+      azMapsConfigTupleIndex: ""
     })
   }
 
@@ -101,7 +101,7 @@ export default class ModalOpen extends React.Component {
         azMapsMapConfigurationList: mapConfigurationList.mapConfigurations,
         azMapsMapConfigurationListOptions: mapConfigurationListOptions,
         azMapsMapConfigurationName: mapConfigurationName,
-        azMapsStyleTupleIndex: ""
+        azMapsConfigTupleIndex: ""
       })
 
       // If there is just a single map configuration then load it automatically
@@ -140,7 +140,7 @@ export default class ModalOpen extends React.Component {
   onChangeAzureMapsMapConfigurationName = (mapConfigurationName) => {
     this.setState({
       azMapsMapConfigurationName: mapConfigurationName,
-      azMapsStyleTupleIndex: ""
+      azMapsConfigTupleIndex: ""
     })
   }
 
@@ -164,11 +164,11 @@ export default class ModalOpen extends React.Component {
 
       this.setState({
         azMapsMapConfiguration,
-        azMapsStyleTupleIndex: "0"
+        azMapsConfigTupleIndex: "0"
       })
 
       // If there is just a single style then load it automatically
-      if (azMapsMapConfiguration.styles.length === 1) {
+      if (azMapsMapConfiguration.configurations.length === 1) {
         this.onSubmitAzureMapsStyle();
       }
     })
@@ -200,9 +200,9 @@ export default class ModalOpen extends React.Component {
     })
   }
 
-  onChangeAzureMapsStyleTupleIndex = (styleTupleIndex) => {
+  onChangeAzureMapsconfigTupleIndex = (configTupleIndex) => {
     this.setState({
-      azMapsStyleTupleIndex: styleTupleIndex
+      azMapsConfigTupleIndex: configTupleIndex
     })
   }
 
@@ -219,7 +219,7 @@ export default class ModalOpen extends React.Component {
       this.state.azMapsMapConfigurationList,
       this.state.azMapsMapConfigurationName,
       this.state.azMapsMapConfiguration,
-      this.state.azMapsStyleTupleIndex,
+      this.state.azMapsConfigTupleIndex,
       canceled)
     .then((resultingStyle) => {
       if(canceled) {
@@ -305,7 +305,7 @@ export default class ModalOpen extends React.Component {
                 </p>
                 <InputSelect
                   aria-label="Azure Maps domain associated with the subscription."
-                  data-wd-key="modal:open.azuremaps.domain" 
+                  data-wd-key="modal:open.azuremaps.domain"
                   options={this.props.azureMapsExtension.domains}
                   value={this.state.azMapsDomain}
                   onChange={this.onChangeAzureMapsDomain}
@@ -328,7 +328,7 @@ export default class ModalOpen extends React.Component {
                   </p>
                   <InputSelect
                     aria-label="Azure Maps map configuration list."
-                    data-wd-key="modal:open.azuremaps.style_set_list" 
+                    data-wd-key="modal:open.azuremaps.style_set_list"
                     options={this.state.azMapsMapConfigurationListOptions}
                     value={this.state.azMapsMapConfigurationName}
                     onChange={this.onChangeAzureMapsMapConfigurationName}
@@ -344,7 +344,7 @@ export default class ModalOpen extends React.Component {
               </form>
             }
 
-            {this.state.azMapsStyleTupleIndex &&
+            {this.state.azMapsConfigTupleIndex &&
               <form onSubmit={this.onSubmitAzureMapsStyle}>
                 <div className="maputnik-style-gallery-container">
                   <p>
@@ -352,17 +352,17 @@ export default class ModalOpen extends React.Component {
                   </p>
                   <InputSelect
                     aria-label="Azure Maps map configuration's style list."
-                    data-wd-key="modal:open.azuremaps.style_set_style_list" 
+                    data-wd-key="modal:open.azuremaps.style_set_style_list"
                     options={this.state.azMapsMapConfiguration.styleTuples.map((styleTuple, idx) => [idx, styleTuple] )}
-                    value={this.state.azMapsStyleTupleIndex}
-                    onChange={this.onChangeAzureMapsStyleTupleIndex}
+                    value={this.state.azMapsConfigTupleIndex}
+                    onChange={this.onChangeAzureMapsconfigTupleIndex}
                   />
 
                   <InputButton
                     data-wd-key="modal:open.azuremaps.load_style_set_style.button"
                     type="submit"
                     className="maputnik-big-button"
-                    disabled={!this.state.azMapsStyleTupleIndex.length}
+                    disabled={!this.state.azMapsConfigTupleIndex.length}
                   >Load selected style</InputButton>
                 </div>
               </form>
