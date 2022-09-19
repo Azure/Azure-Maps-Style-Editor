@@ -638,7 +638,7 @@ export default class App extends React.Component {
 
   openStyle = (styleObj) => {
     if (!styleObj.metadata || styleObj.metadata["azmaps:type"] != "Azure Maps style") {
-      this.state.azureMapsExtension.styleTupleIndex = "";
+      this.state.azureMapsExtension.configTupleIndex = "";
     }
     styleObj = this.setDefaultValues(styleObj)
     this.onStyleChanged(styleObj, {openStyleTransition: true})
