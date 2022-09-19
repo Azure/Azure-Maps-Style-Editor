@@ -375,7 +375,7 @@ class AzureMapsMapConfiguration {
 
   get styleTuples() { return this._styleTuples; }
 
-  get styles() { return this._json.styles; }
+  get configurations() { return this._json.configurations; }
 
   async load(mapConfigurationBlob, canceled) {
     let mapConfigurationZip = await JSZip.loadAsync(mapConfigurationBlob);
@@ -399,7 +399,7 @@ class AzureMapsMapConfiguration {
     this._zip = mapConfigurationZip;
     this._jsonFileName = jsonFileName;
     this._json = json;
-    this._styleTuples = this.extractStyleTuples();
+    this._styleTuples = this.extractConfigTuples();
   }
 
   generateZip() {
@@ -407,23 +407,23 @@ class AzureMapsMapConfiguration {
     return this._zip.generateAsync({type: "blob"});
   }
 
-  extractStyleTuples() {
-    var styleTuples = [];
-    for (const style of this._json.styles) {
-      for (const tuple of style.layers) {
-        styleTuples.push(tuple.styleId + " + " + tuple.tilesetId);
+  extractConfigTuples() {
+    var configTuples = [];
+    for (const configuration of this._json.configurations) {
+      for (const tuple of configuration.layers) {
+        configTuples.push(tuple.styleId + " + " + tuple.tilesetId);
       }
     }
-    return styleTuples;
+    return configTuples;
   }
 
-  getStyleTupleDetails(styleTupleIndex) {
+  getConfigTupleDetails(configTupleIndex) {
     let index = 0;
-    for (const style of this._json.styles) {
-      for (const tuple of style.layers) {
-        if (index == styleTupleIndex) {
+    for (const config of this._json.configurations) {
+      for (const tuple of config.layers) {
+        if (index === configTupleIndex) {
           return {
-            style: style,
+            config: config,
             tilesetId: tuple.tilesetId,
             styleId: tuple.styleId
           };
@@ -433,16 +433,16 @@ class AzureMapsMapConfiguration {
     }
   }
 
-  updateStyleTupleDetails(styleTupleIndex, details) {
+  updateConfigTupleDetails(configTupleIndex, details) {
     let {newStyle, newBaseMap, tilesetId, styleId} = details;
     let index = 0;
-    for (const styleIndex in this._json.styles) {
-      if (Object.hasOwn(this._json.styles, styleIndex)) {
-        for (const tupleIndex in this._json.styles[styleIndex].layers) {
-          if (Object.hasOwn(this._json.styles[styleIndex].layers, tupleIndex)) {
-            if (index == styleTupleIndex) {
+    for (const configIndex in this._json.configurations) {
+      if (Object.hasOwn(this._json.configurations, configIndex)) {
+        for (const tupleIndex in this._json.configurations[configIndex].layers) {
+          if (Object.hasOwn(this._json.configurations[configIndex].layers, tupleIndex)) {
+            if (index == configTupleIndex) {
               if (!newStyle) {
-                newStyle = this._json.styles[styleIndex];
+                newStyle = this._json.configurations[configIndex];
               }
               if (newBaseMap) {
                 newStyle.baseMap = newBaseMap;
@@ -453,8 +453,8 @@ class AzureMapsMapConfiguration {
               if (styleId) {
                 newStyle.layers[tupleIndex].styleId = styleId;
               }
-              this._json.styles[styleIndex] = newStyle;
-              this._styleTuples = this.extractStyleTuples();
+              this._json.configurations[configIndex] = newStyle;
+              this._styleTuples = this.extractConfigTuples();
               return;
             }
             ++index;
@@ -497,7 +497,7 @@ class AzureMapsExtension {
     this._mapConfigurationList = defaultMapConfigurationList;
     this._mapConfigurationName = "";
     this._mapConfiguration = new AzureMapsMapConfiguration();
-    this._styleTupleIndex = "";
+    this._configTupleIndex = "";
     this._style = null;
     this._styleAlias = "";
     this._styleDescription = "";
@@ -526,8 +526,8 @@ class AzureMapsExtension {
     this._mapConfiguration = newMapConfiguration;
   }
 
-  get styleTupleIndex() { return this._styleTupleIndex; }
-  set styleTupleIndex(newStyleTupleIndex) { this._styleTupleIndex = newStyleTupleIndex; }
+  get configTupleIndex() { return this._configTupleIndex; }
+  set configTupleIndex(newConfigTupleIndex) { this._configTupleIndex = newConfigTupleIndex; }
 
   get styleAlias() { return this._styleAlias; }
   set styleAlias(newStyleAlias) { this._styleAlias = newStyleAlias; }
@@ -543,10 +543,10 @@ class AzureMapsExtension {
 
   get baseMap() { return this._baseMap; }
 
-  get requestHeaders() { return this._styleTupleIndex ? { 'subscription-key': this._subscriptionKey } : {}; }
+  get requestHeaders() { return this._configTupleIndex ? { 'subscription-key': this._subscriptionKey } : {}; }
 
   transformUrl(url) {
-    if (this._styleTupleIndex && url)
+    if (this._configTupleIndex && url)
     {
       if (url.startsWith(fakeDomainForSprite)) {
         return this._style.getSpriteUrl(url);
@@ -564,7 +564,7 @@ class AzureMapsExtension {
   }
 
   transformRequest(url, resourceType) {
-    return this._styleTupleIndex ? {
+    return this._configTupleIndex ? {
       url: this.transformUrl(url),
       headers: {'subscription-key': this._subscriptionKey}
     } : {
@@ -578,19 +578,19 @@ class AzureMapsExtension {
     mapConfigurationList,
     mapConfigurationName,
     mapConfiguration,
-    styleTupleIndex,
+    configTupleIndex,
     canceled) {
 
-    const styleTupleDetails = mapConfiguration.getStyleTupleDetails(parseInt(styleTupleIndex));
-    if (!styleTupleDetails) {
-      throw new Error('Got invalid style tuple index: ' + styleTupleIndex);
+    const configTupleDetails = mapConfiguration.getConfigTupleDetails(parseInt(configTupleIndex));
+    if (!configTupleDetails) {
+      throw new Error('Got invalid style tuple index: ' + configTupleIndex);
     }
 
-    const styleName = styleTupleDetails.styleId;
+    const styleName = configTupleDetails.styleId;
     let style = new AzureMapsStyle();
     await style.load(await getStyle(domain, styleName, subscriptionKey, canceled));
 
-    const tilesetName = styleTupleDetails.tilesetId;
+    const tilesetName = configTupleDetails.tilesetId;
     let tilesetMetadata = new AzureMapsTilesetMetadata(await getTilesetMetadata(domain, tilesetName, subscriptionKey, canceled));
 
     // Get style alias and description
@@ -617,7 +617,7 @@ class AzureMapsExtension {
 
     let resultingStyle = {
       "version": 8,
-      "name": cloneDeep(style.json.name) || mapConfiguration.styleTuples[parseInt(styleTupleIndex)],
+      "name": cloneDeep(style.json.name) || mapConfiguration.styleTuples[parseInt(configTupleIndex)],
       "sources": {},
       "sprite": fakeDomainForSprite,
       "glyphs": "https://" + domain + "/styles/glyphs/{fontstack}/{range}.pbf",
@@ -649,7 +649,7 @@ class AzureMapsExtension {
     });
 
     // Apply base map
-    const baseMap = checkBaseMapStyleName(styleTupleDetails.style.baseMap);
+    const baseMap = checkBaseMapStyleName(configTupleDetails.config.baseMap);
     resultingStyle = await updateBaseMapForStyle(baseMap, resultingStyle, domain, subscriptionKey);
 
     if (canceled) return null;
@@ -661,7 +661,7 @@ class AzureMapsExtension {
     this._mapConfiguration = mapConfiguration;
     this._mapConfigurationAlias = mapConfigurationAlias;
     this._mapConfigurationDescription = mapConfigurationDescription;
-    this._styleTupleIndex = styleTupleIndex;
+    this._configTupleIndex = configTupleIndex;
     this._style = style;
     this._styleAlias = styleAlias;
     this._styleDescription = styleDescription;
@@ -673,7 +673,7 @@ class AzureMapsExtension {
   async updateBaseMap(newBaseMapStyleName, style) {
     const baseMapStyleName = checkBaseMapStyleName(newBaseMapStyleName);
     const resultingStyle = await updateBaseMapForStyle(baseMapStyleName, style, this._domain, this._subscriptionKey);
-    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { newBaseMap: baseMapStyleName });
+    this._mapConfiguration.updateConfigTupleDetails(this._configTupleIndex, { newBaseMap: baseMapStyleName });
     this._baseMap = baseMapStyleName || "blank";
     return resultingStyle;
   }
@@ -742,7 +742,7 @@ class AzureMapsExtension {
   }
 
   async getUpdatedMapConfiguration(styleId) {
-    this._mapConfiguration.updateStyleTupleDetails(this._styleTupleIndex, { styleId: this._styleAlias || styleId });
+    this._mapConfiguration.updateConfigTupleDetails(this._configTupleIndex, { styleId: this._styleAlias || styleId });
     return this._mapConfiguration.generateZip();
   }
 
