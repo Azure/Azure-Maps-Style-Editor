@@ -145,43 +145,43 @@ export default class AppToolbar extends React.Component {
     const baseMaps = [
       {
         id: "blank",
-        title: "(no base map)"
+        title: "No base map (blank)",
       },
       {
         id: "microsoft_light",
-        title: "Microsoft light (road)"
+        title: "Microsoft light (road)",
       },
       {
         id: "microsoft_dark",
-        title: "Microsoft dark (night)"
+        title: "Microsoft dark (night)",
       },
       {
         id: "microsoft_grayscale_light",
-        title: "Microsoft grayscale light"
+        title: "Microsoft grayscale light",
       },
       {
         id: "microsoft_grayscale_dark",
-        title: "Microsoft grayscale dark"
+        title: "Microsoft grayscale dark",
       },
       {
         id: "microsoft_shaded_relief",
-        title: "Microsoft light (road_shaded_relief)"
+        title: "Microsoft light (road_shaded_relief)",
       },
       {
         id: "microsoft_high_contrast_light",
-        title: "Microsoft high contrast light"
+        title: "Microsoft high contrast light",
       },
       {
         id: "microsoft_high_contrast_dark",
-        title: "Microsoft high contrast dark"
+        title: "Microsoft high contrast dark",
       },
       {
         id: "microsoft_satellite",
-        title: "Microsoft satellite"
+        title: "Microsoft satellite",
       },
       {
         id: "microsoft_satellite_road",
-        title: "Microsoft satellite with road labels"
+        title: "Microsoft satellite with road labels",
       },
     ];
 

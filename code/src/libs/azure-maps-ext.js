@@ -444,7 +444,7 @@ class AzureMapsMapConfiguration {
               if (!newStyle) {
                 newStyle = this._json.styles[styleIndex];
               }
-              if (newBaseMap) {
+              if (newBaseMap !== undefined) {
                 newStyle.baseMap = newBaseMap;
               }
               if (tilesetId) {
