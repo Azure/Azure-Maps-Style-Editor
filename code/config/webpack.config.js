@@ -2,7 +2,6 @@
 var path = require('path');
 var rules = require('./webpack.rules');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var HtmlWebpackInlineSVGPlugin = require('html-webpack-inline-svg-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const HOST = process.env.HOST || "127.0.0.1";
@@ -58,9 +57,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       title: 'Maputnik',
       template: './src/template.html'
-    }),
-    new HtmlWebpackInlineSVGPlugin({
-      runPreEmit: true,
     }),
     new CopyWebpackPlugin({
       patterns: [
