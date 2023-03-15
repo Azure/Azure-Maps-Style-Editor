@@ -640,8 +640,53 @@ export default class App extends React.Component {
     if (!styleObj.metadata || styleObj.metadata["azmaps:type"] != "Azure Maps style") {
       this.state.azureMapsExtension.configTupleIndex = "";
     }
+    styleObj.layers = this.addDefaultOrdinalFilter(styleObj.layers);
     styleObj = this.setDefaultValues(styleObj)
     this.onStyleChanged(styleObj, {openStyleTransition: true})
+  }
+
+  addDefaultOrdinalFilter(layers) {
+    const defaultOrdinal = 0;
+    return layers.map((layer) => {
+      if (!isLayerSelectable(layer)) {
+        return layer;
+      }
+      if (layer.filter === undefined) {
+        return {
+          ...layer,
+          filter: ['all', ['==', 'levelOrdinal', defaultOrdinal]],
+        }
+      }
+      if (!['all', 'none', 'any'].includes(layer.filter[0])) {
+        if (layer.filter[1] !== 'levelOrdinal') {
+          return {
+            ...layer,
+            filter: ['all', ['==', 'levelOrdinal', defaultOrdinal], layer.filter],
+          }
+        }
+        return layer;
+      }
+
+      const layerHasOrdinalFilter = layer.filter.some((filter) => typeof filter === 'object' && filter[1] === 'levelOrdinal');
+      if (layerHasOrdinalFilter) {
+        return layer;
+      }
+
+      if (layer.filter[0] === 'all') {
+        return {
+          ...layer,
+          filter: ['all', ['==', 'levelOrdinal', defaultOrdinal], ...layer.filter.slice(1)],
+        }
+      }
+      if (layer.filter[0] === 'none') {
+        return {
+          ...layer,
+          filter: ['all', ['!=', 'levelOrdinal', defaultOrdinal], ...layer.filter.slice(1)],
+        }
+      }
+
+      return layer;
+    });
   }
 
   fetchSources() {
