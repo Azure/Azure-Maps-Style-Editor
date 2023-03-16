@@ -348,7 +348,7 @@ export default class ModalOpen extends React.Component {
               <form onSubmit={this.onSubmitAzureMapsStyle}>
                 <div className="maputnik-style-gallery-container">
                   <p>
-                    Select the style + tileset:
+                    Select the style:
                   </p>
                   <InputSelect
                     aria-label="Azure Maps map configuration's style list."
