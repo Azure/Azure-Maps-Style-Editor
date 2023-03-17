@@ -638,6 +638,7 @@ export default class App extends React.Component {
   }
 
   openStyle = (styleObj) => {
+    this.setState({ minOrdinal: null });
     if (!styleObj.metadata || styleObj.metadata["azmaps:type"] != "Azure Maps style") {
       this.state.azureMapsExtension.configTupleIndex = "";
     }
@@ -742,6 +743,7 @@ export default class App extends React.Component {
     const {mapStyle, dirtyMapStyle, selectableLayers, openStyleTransition} = this.state;
 
     const mapProps = {
+      isMinOrdinalSet: this.state.minOrdinal !== null,
       mapStyle: (dirtyMapStyle || mapStyle),
       selectableLayers,
       openStyleTransition,

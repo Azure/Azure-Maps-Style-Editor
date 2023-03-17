@@ -218,7 +218,7 @@ export default class MapMapboxGl extends React.Component {
     })
 
     map.on("sourcedata", e => {
-      if (!e.isSourceLoaded) {
+      if (!e.isSourceLoaded || this.props.isMinOrdinalSet) {
         return;
       }
 
@@ -232,9 +232,11 @@ export default class MapMapboxGl extends React.Component {
         }
       });
 
-      this.props.onSourceDataLoad({
-        minOrdinal,
-      })
+      if (minOrdinal !== null) {
+        this.props.onSourceDataLoad({
+          minOrdinal,
+        });
+      }
     })
 
     map.on("data", e => {
