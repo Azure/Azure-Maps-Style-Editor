@@ -348,12 +348,12 @@ export default class ModalOpen extends React.Component {
               <form onSubmit={this.onSubmitAzureMapsStyle}>
                 <div className="maputnik-style-gallery-container">
                   <p>
-                    Select the style + tileset:
+                    Select the style:
                   </p>
                   <InputSelect
                     aria-label="Azure Maps map configuration's style list."
                     data-wd-key="modal:open.azuremaps.style_set_style_list"
-                    options={this.state.azMapsMapConfiguration.styleTuples.map((styleTuple, idx) => [idx, styleTuple] )}
+                    options={this.state.azMapsMapConfiguration.styleTuples.map((styleTuple, idx) => [idx, styleTuple.name] )}
                     value={this.state.azMapsConfigTupleIndex}
                     onChange={this.onChangeAzureMapsconfigTupleIndex}
                   />

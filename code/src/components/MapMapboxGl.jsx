@@ -185,7 +185,7 @@ export default class MapMapboxGl extends React.Component {
     map.addControl(nav, 'top-right');
 
     const tmpNode = document.createElement('div');
-    
+
     const inspect = new MapboxInspect({
       popup: new MapboxGl.Popup({
         closeOnClick: false
@@ -215,6 +215,28 @@ export default class MapMapboxGl extends React.Component {
         inspect,
         zoom: map.getZoom()
       });
+    })
+
+    map.on("sourcedata", e => {
+      if (!e.isSourceLoaded || this.props.isMinOrdinalSet) {
+        return;
+      }
+
+      let minOrdinal = null;
+      map.queryRenderedFeatures().forEach((f) => {
+        if (typeof f?.properties?.levelOrdinal !== 'number') {
+          return;
+        }
+        if (minOrdinal === null || minOrdinal > f.properties.levelOrdinal) {
+          minOrdinal = f.properties.levelOrdinal;
+        }
+      });
+
+      if (minOrdinal !== null) {
+        this.props.onSourceDataLoad({
+          minOrdinal,
+        });
+      }
     })
 
     map.on("data", e => {

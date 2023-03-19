@@ -231,6 +231,7 @@ export default class App extends React.Component {
         debugToolbox: false,
       },
       openStyleTransition: false,
+      minOrdinal: null,
     }
 
     this.layerWatcher = new LayerWatcher({
@@ -637,6 +638,7 @@ export default class App extends React.Component {
   }
 
   openStyle = (styleObj) => {
+    this.setState({ minOrdinal: null });
     if (!styleObj.metadata || styleObj.metadata["azmaps:type"] != "Azure Maps style") {
       this.state.azureMapsExtension.configTupleIndex = "";
     }
@@ -741,6 +743,7 @@ export default class App extends React.Component {
     const {mapStyle, dirtyMapStyle, selectableLayers, openStyleTransition} = this.state;
 
     const mapProps = {
+      isMinOrdinalSet: this.state.minOrdinal !== null,
       mapStyle: (dirtyMapStyle || mapStyle),
       selectableLayers,
       openStyleTransition,
@@ -748,6 +751,9 @@ export default class App extends React.Component {
         return style.replaceAccessTokens(mapStyle, {
           allowFallback: true
         });
+      },
+      onSourceDataLoad: (e) => {
+        this.setState({ minOrdinal: e.minOrdinal });
       },
       onDataChange: (e) => {
         this.layerWatcher.analyzeMap(e.map)
@@ -771,6 +777,9 @@ export default class App extends React.Component {
         onLayerSelect={this.onLayerSelect}
       />
     } else {
+      mapProps.mapStyle.layers = this.addDefaultOrdinalFilter(mapProps.mapStyle.layers);
+      mapProps.selectableLayers = this.addDefaultOrdinalFilter(mapProps.selectableLayers);
+
       mapElement = <MapMapboxGl {...mapProps}
         onChange={this.onMapChange}
         options={ {...this.state.mapboxGlDebugOptions, transformRequest: this.transformRequest } }
@@ -791,6 +800,52 @@ export default class App extends React.Component {
     return <div style={elementStyle} className="maputnik-map__container">
       {mapElement}
     </div>
+  }
+
+  addDefaultOrdinalFilter(layers) {
+    if (this.state.minOrdinal === null) {
+      return layers;
+    }
+    return layers.map((layer) => {
+      if (!isLayerSelectable(layer)) {
+        return layer;
+      }
+      if (layer.filter === undefined) {
+        return {
+          ...layer,
+          filter: ['all', ['==', 'levelOrdinal', this.state.minOrdinal]],
+        }
+      }
+      if (!['all', 'none', 'any'].includes(layer.filter[0])) {
+        if (layer.filter[1] !== 'levelOrdinal') {
+          return {
+            ...layer,
+            filter: ['all', ['==', 'levelOrdinal', this.state.minOrdinal], layer.filter],
+          }
+        }
+        return layer;
+      }
+
+      const layerHasOrdinalFilter = layer.filter.some((filter) => typeof filter === 'object' && filter[1] === 'levelOrdinal');
+      if (layerHasOrdinalFilter) {
+        return layer;
+      }
+
+      if (layer.filter[0] === 'all') {
+        return {
+          ...layer,
+          filter: ['all', ['==', 'levelOrdinal', this.state.minOrdinal], ...layer.filter.slice(1)],
+        }
+      }
+      if (layer.filter[0] === 'none') {
+        return {
+          ...layer,
+          filter: ['all', ['!=', 'levelOrdinal', this.state.minOrdinal], ...layer.filter.slice(1)],
+        }
+      }
+
+      return layer;
+    });
   }
 
   setStateInUrl = () => {

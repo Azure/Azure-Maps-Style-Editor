@@ -410,27 +410,18 @@ class AzureMapsMapConfiguration {
   extractConfigTuples() {
     var configTuples = [];
     for (const configuration of this._json.configurations) {
-      for (const tuple of configuration.layers) {
-        configTuples.push(tuple.styleId + " + " + tuple.tilesetId);
+      const name = configuration.displayName || configuration.name;
+      for (const style of configuration.layers) {
+        configTuples.push({
+          name: configuration.layers.length === 1 ? name : `${name} (Tileset ID: ${style.tilesetId})`,
+          tuple: `${style.styleId} + ${style.tilesetId}`,
+          baseMap: configuration.baseMap,
+          styleId: style.styleId,
+          tilesetId: style.tilesetId,
+        });
       }
     }
     return configTuples;
-  }
-
-  getConfigTupleDetails(configTupleIndex) {
-    let index = 0;
-    for (const config of this._json.configurations) {
-      for (const tuple of config.layers) {
-        if (index === configTupleIndex) {
-          return {
-            config: config,
-            tilesetId: tuple.tilesetId,
-            styleId: tuple.styleId
-          };
-        }
-        ++index;
-      }
-    }
   }
 
   updateConfigTupleDetails(configTupleIndex, details) {
@@ -581,7 +572,7 @@ class AzureMapsExtension {
     configTupleIndex,
     canceled) {
 
-    const configTupleDetails = mapConfiguration.getConfigTupleDetails(parseInt(configTupleIndex));
+    const configTupleDetails = mapConfiguration.styleTuples[parseInt(configTupleIndex)];
     if (!configTupleDetails) {
       throw new Error('Got invalid style tuple index: ' + configTupleIndex);
     }
@@ -617,7 +608,7 @@ class AzureMapsExtension {
 
     let resultingStyle = {
       "version": 8,
-      "name": cloneDeep(style.json.name) || mapConfiguration.styleTuples[parseInt(configTupleIndex)],
+      "name": cloneDeep(style.json.name) || mapConfiguration.styleTuples[parseInt(configTupleIndex)].tuple,
       "sources": {},
       "sprite": fakeDomainForSprite,
       "glyphs": "https://" + domain + "/styles/glyphs/{fontstack}/{range}.pbf",
@@ -649,7 +640,7 @@ class AzureMapsExtension {
     });
 
     // Apply base map
-    const baseMap = checkBaseMapStyleName(configTupleDetails.config.baseMap);
+    const baseMap = checkBaseMapStyleName(configTupleDetails.baseMap);
     resultingStyle = await updateBaseMapForStyle(baseMap, resultingStyle, domain, subscriptionKey);
 
     if (canceled) return null;
