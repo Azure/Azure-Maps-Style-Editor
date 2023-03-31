@@ -744,7 +744,7 @@ export default class App extends React.Component {
 
     const mapProps = {
       isMinOrdinalSet: this.state.minOrdinal !== null,
-      mapStyle: (dirtyMapStyle || mapStyle),
+      mapStyle: (dirtyMapStyle || {...mapStyle}),
       selectableLayers,
       openStyleTransition,
       replaceAccessTokens: (mapStyle) => {
