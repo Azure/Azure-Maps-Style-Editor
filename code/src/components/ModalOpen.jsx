@@ -280,6 +280,7 @@ export default class ModalOpen extends React.Component {
           isOpen={this.props.isOpen}
           onOpenToggle={() => this.onOpenToggle()}
           title={'Open style'}
+          underlayClickExits={false}
         >
           {errorElement}
           <section className="maputnik-modal-section">
