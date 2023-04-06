@@ -294,7 +294,7 @@ export default class ModalOpen extends React.Component {
                 <InputString
                   aria-label="Azure Maps subscription key for now. RBAC access will be implemented later."
                   data-wd-key="modal:open.azuremaps.subscription_key"
-                  type="text"
+                  type="password"
                   default="Azure Maps subscription key..."
                   value={this.state.azMapsKey}
                   onInput={this.onChangeAzureMapsSubscriptionKey}
