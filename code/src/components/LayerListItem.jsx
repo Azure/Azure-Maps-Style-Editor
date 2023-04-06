@@ -14,7 +14,7 @@ const DraggableLabel = SortableHandle((props) => {
       className="layer-handle__icon"
       type={props.layerType}
     />
-    <button className="maputnik-layer-list-item-id">
+    <button className="maputnik-layer-list-item-id" title={props.layerId}>
       {props.layerId}
     </button>
   </div>

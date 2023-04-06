@@ -71,6 +71,7 @@ export default class InputString extends React.Component {
       disabled: this.props.disabled,
       className: classes.join(" "),
       style: this.props.style,
+      type: this.props.type,
       value: this.state.value === undefined ? "" : this.state.value,
       placeholder: this.props.default,
       onChange: e => {
