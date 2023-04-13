@@ -194,6 +194,7 @@ export default class ModalExport extends React.Component {
         activeRequest: null,
         activeRequestMessage: ""
       });
+      this.props.onSuccess(mapConfigurationId);
     })
     .catch(err => {
       let errorMessage = 'Failed to upload map configuration';

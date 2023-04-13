@@ -523,6 +523,9 @@ class AzureMapsExtension {
   get styleAlias() { return this._styleAlias; }
   set styleAlias(newStyleAlias) { this._styleAlias = newStyleAlias; }
 
+  get styleName() { return this._styleName; }
+  set styleName(newStyleName) { this._styleName = newStyleName; }
+
   get styleDescription() { return this._styleDescription; }
   set styleDescription(newStyleDescription) { this._styleDescription = newStyleDescription; }
 
@@ -655,6 +658,7 @@ class AzureMapsExtension {
     this._configTupleIndex = configTupleIndex;
     this._style = style;
     this._styleAlias = styleAlias;
+    this._styleName = configTupleDetails.name;
     this._styleDescription = styleDescription;
     this._tilesetMetadata = tilesetMetadata;
     this._baseMap = baseMap || "blank";
