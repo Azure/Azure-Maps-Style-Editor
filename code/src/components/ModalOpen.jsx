@@ -92,7 +92,10 @@ export default class ModalOpen extends React.Component {
       const mapConfigurationList = azureMapsExt.ensureMapConfigurationListValidity(body);
 
       const mapConfigurationListOptions = mapConfigurationList.mapConfigurations.map(mapConfig => {
-        return (!mapConfig.alias || mapConfig.alias.startsWith("default")) ? [mapConfig.mapConfigurationId, mapConfig.mapConfigurationId] : [mapConfig.mapConfigurationId, mapConfig.alias];
+        if (!mapConfig.alias) {
+          return [mapConfig.mapConfigurationId, mapConfig.mapConfigurationId];
+        }
+        return [mapConfig.mapConfigurationId, `${mapConfig.mapConfigurationId}, ${mapConfig.alias}`];
       });
 
       const mapConfigurationName = mapConfigurationListOptions.length ? mapConfigurationListOptions[0][0] : "";
@@ -325,7 +328,7 @@ export default class ModalOpen extends React.Component {
               <form onSubmit={this.onSubmitAzureMapsMapConfiguration}>
                 <div className="maputnik-style-gallery-container">
                   <p>
-                    Select the map configuration:
+                    Select the map configuration (mapconfigurationId, alias):
                   </p>
                   <InputSelect
                     aria-label="Azure Maps map configuration list."
@@ -333,6 +336,7 @@ export default class ModalOpen extends React.Component {
                     options={this.state.azMapsMapConfigurationListOptions}
                     value={this.state.azMapsMapConfigurationName}
                     onChange={this.onChangeAzureMapsMapConfigurationName}
+                    style={{fontFamily: 'monospace'}}
                   />
 
                   <InputButton
