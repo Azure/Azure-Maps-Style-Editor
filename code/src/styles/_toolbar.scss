@@ -127,7 +127,6 @@
 
 .maputnik-toolbar__actions {
   white-space: nowrap;
-  flex: 1;
   overflow-y: auto;
 }
 
@@ -153,3 +152,16 @@
   }
 }
 
+.maputnik-toolbar-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  font-family: monospace;
+  white-space: break-spaces;
+}
+
+.maputnik-toolbar-info-map-config-container {
+  display: flex;
+  flex-direction: column;
+}
