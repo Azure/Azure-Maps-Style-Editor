@@ -972,14 +972,24 @@ export default class App extends React.Component {
     });
   }
 
+  updateMapConfigId = (mapConfigId) => {
+    this.state.azureMapsExtension.mapConfigurationName = mapConfigId;
+  }
+
   render() {
     const layers = this.state.selectableLayers
     const selectedLayer = layers.length > 0 ? layers[this.state.selectedLayerIndex] : null
+    const mapData = {
+      mapId: this.state.azureMapsExtension.mapConfigurationName,
+      styleName: this.state.azureMapsExtension.styleName,
+      alias: this.state.azureMapsExtension.mapConfigurationAlias,
+    };
 
     const toolbar = <AppToolbar
       renderer={this._getRenderer()}
       mapState={this.state.mapState}
       mapStyle={this.state.mapStyle}
+      mapData={mapData}
       inspectModeEnabled={this.state.mapState === "inspect"}
       sources={this.state.sources}
       onStyleChanged={this.onStyleChanged}
@@ -1052,6 +1062,7 @@ export default class App extends React.Component {
         isOpen={this.state.isOpen.export}
         onOpenToggle={this.toggleModal.bind(this, 'export')}
         azureMapsExtension={this.state.azureMapsExtension}
+        onSuccess={this.updateMapConfigId}
       />
       <ModalOpen
         onStyleOpen={this.openStyle}
