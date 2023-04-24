@@ -37,10 +37,9 @@ const fakeDomainForSprite = "https://fake.domain.com/for/sprite";
 
 // Azure Maps REST API URLs:
 function getTilesetMetadataUrl(domain, tilesetId) { return "https://" + domain + "/tilesets/" + tilesetId + "?api-version=" + apiVersion; }
-function createStyleUrl(domain, alias, description) { return "https://" + domain + "/styles?api-version=" + apiVersion + "&styleFormat=azureMapsStyle&alias=" + alias + "&description=" + description; }
+function createStyleUrl(domain, description) { return "https://" + domain + "/styles?api-version=" + apiVersion + "&styleFormat=azureMapsStyle&description=" + description; }
 function listStylesUrl(domain) { return "https://" + domain + "/styles?api-version=" + apiVersion; }
 function getStyleUrl(domain, styleName) { return "https://" + domain + "/styles/" + styleName + "?api-version=" + apiVersion + "&styleFormat=azureMapsStyle"; }
-function deleteStyleUrl(domain, styleName) { return "https://" + domain + "/styles/" + styleName + "?api-version=" + apiVersion; }
 function createMapConfigurationUrl(domain, alias, description) { return "https://" + domain + "/styles/mapConfigurations?api-version=" + apiVersion + "&alias=" + alias + "&description=" + description; }
 function listMapConfigurationsUrl(domain) { return "https://" + domain + "/styles/mapConfigurations?api-version=" + apiVersion; }
 function getMapConfigurationUrl(domain, mapConfigurationName) { return "https://" + domain + "/styles/mapConfigurations/" + mapConfigurationName + "?api-version=" + apiVersion; }
@@ -152,8 +151,8 @@ async function uploadStyleArtifact(url, blob, subscriptionKey, canceled) {
   }
 }
 
-function createStyle(domain, alias, description, blob, subscriptionKey, canceled) {
-  return uploadStyleArtifact(createStyleUrl(domain, alias, description), blob, subscriptionKey, canceled);
+function createStyle(domain, description, blob, subscriptionKey, canceled) {
+  return uploadStyleArtifact(createStyleUrl(domain, description), blob, subscriptionKey, canceled);
 }
 
 async function listStyles(domain, subscriptionKey, canceled) {
@@ -167,16 +166,6 @@ async function listStyles(domain, subscriptionKey, canceled) {
 
 async function getStyle(domain, styleName, subscriptionKey, canceled) {
   return processBlobResponse( await fetch(getStyleUrl(domain, styleName), {
-    mode: 'cors',
-    headers: {'subscription-key': subscriptionKey},
-    credentials: "same-origin",
-    cache: "reload"
-  }), canceled);
-}
-
-async function deleteStyle(domain, styleName, subscriptionKey, canceled) {
-  return processResponse( await fetch(deleteStyleUrl(domain, styleName), {
-    method: 'DELETE',
     mode: 'cors',
     headers: {'subscription-key': subscriptionKey},
     credentials: "same-origin",
@@ -471,11 +460,6 @@ class AzureMapsTilesetMetadata {
   get bbox() { return this._json?.bbox; }
 }
 
-const defaultMapConfigurationList = {
-  "mapConfigurations": [
-  ]
-};
-
 function delay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
@@ -485,12 +469,11 @@ class AzureMapsExtension {
   constructor() {
     this._subscriptionKey = "";
     this._domain = domains[0][0];
-    this._mapConfigurationList = defaultMapConfigurationList;
+    this._mapConfigurationList = [];
     this._mapConfigurationName = "";
     this._mapConfiguration = new AzureMapsMapConfiguration();
     this._configTupleIndex = "";
     this._style = null;
-    this._styleAlias = "";
     this._styleDescription = "";
     this._language = "en-us";
     this._view = "Unified";
@@ -519,9 +502,6 @@ class AzureMapsExtension {
 
   get configTupleIndex() { return this._configTupleIndex; }
   set configTupleIndex(newConfigTupleIndex) { this._configTupleIndex = newConfigTupleIndex; }
-
-  get styleAlias() { return this._styleAlias; }
-  set styleAlias(newStyleAlias) { this._styleAlias = newStyleAlias; }
 
   get styleName() { return this._styleName; }
   set styleName(newStyleName) { this._styleName = newStyleName; }
@@ -588,12 +568,10 @@ class AzureMapsExtension {
     let tilesetMetadata = new AzureMapsTilesetMetadata(await getTilesetMetadata(domain, tilesetName, subscriptionKey, canceled));
 
     // Get style alias and description
-    let styleAlias = "custom_style";
     let styleDescription = "Custom style created in Azure Maps style editor";
     for (const styleMetadata of (await listStyles(domain, subscriptionKey, canceled)).styles) {
       if (styleMetadata.styleId === styleName || styleMetadata.alias === styleName)
       {
-        styleAlias = styleMetadata.alias;
         styleDescription = styleMetadata.description;
       }
     }
@@ -657,7 +635,6 @@ class AzureMapsExtension {
     this._mapConfigurationDescription = mapConfigurationDescription;
     this._configTupleIndex = configTupleIndex;
     this._style = style;
-    this._styleAlias = styleAlias;
     this._styleName = configTupleDetails.name;
     this._styleDescription = styleDescription;
     this._tilesetMetadata = tilesetMetadata;
@@ -671,17 +648,6 @@ class AzureMapsExtension {
     this._mapConfiguration.updateConfigTupleDetails(this._configTupleIndex, { newBaseMap: baseMapStyleName });
     this._baseMap = baseMapStyleName || "blank";
     return resultingStyle;
-  }
-
-  async getStyleId(styleAlias) {
-    if (styleAlias) {
-      for (const styleMetadata of (await listStyles(this._domain, this._subscriptionKey)).styles) {
-        if (styleMetadata.alias === styleAlias) {
-          return styleMetadata.styleId;
-        }
-      }
-    }
-    return "";
   }
 
   getUpdatedStyle(newStyle) {
@@ -708,21 +674,12 @@ class AzureMapsExtension {
     return this._style.updateAndGenerateZip(style);
   }
 
-  async uploadResultingStyle(newStyle, canceled) {
-    throwIfBadAlias(this._styleAlias)
-
+  async uploadResultingStyle(newStyle, canceled, styleDescription) {
     const blob = await this.getUpdatedStyle(newStyle);
 
     throwIfUserCanceled(canceled)
 
-    const oldStyleId = await this.getStyleId(this._styleAlias);
-    const newStyleId = await createStyle(this._domain, this._styleAlias, this._styleDescription, blob, this._subscriptionKey, canceled);
-
-    if (oldStyleId) {
-      await deleteStyle(this._domain, oldStyleId, this._subscriptionKey);
-    }
-
-    return newStyleId;
+    return await createStyle(this._domain, styleDescription, blob, this._subscriptionKey, canceled);
   }
 
   async getMapConfigurationId(mapConfigurationAlias) {
@@ -737,21 +694,21 @@ class AzureMapsExtension {
   }
 
   async getUpdatedMapConfiguration(styleId) {
-    this._mapConfiguration.updateConfigTupleDetails(this._configTupleIndex, { styleId: this._styleAlias || styleId });
+    this._mapConfiguration.updateConfigTupleDetails(this._configTupleIndex, { styleId: styleId });
     return this._mapConfiguration.generateZip();
   }
 
-  async uploadResultingMapConfiguration(styleId, canceled) {
-    throwIfBadAlias(this._mapConfigurationAlias)
+  async uploadResultingMapConfiguration(styleId, canceled, mapConfigurationAlias, mapConfigurationDescription, deleteExistingMapConfig) {
+    throwIfBadAlias(mapConfigurationAlias)
 
     const blob = await this.getUpdatedMapConfiguration(styleId);
 
     throwIfUserCanceled(canceled)
 
-    const oldMapConfigurationId = await this.getMapConfigurationId(this._mapConfigurationAlias);
-    const newMapConfigurationId = await createMapConfiguration(this._domain, this._mapConfigurationAlias, this._mapConfigurationDescription, blob, this._subscriptionKey, canceled);
+    const oldMapConfigurationId = await this.getMapConfigurationId(this.mapConfigurationAlias);
+    const newMapConfigurationId = await createMapConfiguration(this._domain, mapConfigurationAlias, mapConfigurationDescription, blob, this._subscriptionKey, canceled);
 
-    if (oldMapConfigurationId) {
+    if (oldMapConfigurationId && deleteExistingMapConfig) {
       await deleteMapConfiguration(this._domain, oldMapConfigurationId, this._subscriptionKey);
     }
 

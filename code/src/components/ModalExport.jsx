@@ -7,7 +7,7 @@ import ModalInfo from './ModalInfo'
 import ModalPrompt from './ModalPrompt'
 import Modal from './Modal'
 import { MdCloudUpload } from 'react-icons/md'
-
+import FieldCheckbox from './FieldCheckbox'
 
 export default class ModalExport extends React.Component {
   static propTypes = {
@@ -26,15 +26,42 @@ export default class ModalExport extends React.Component {
       activeRequest: null,
       activeRequestMessage: "",
       error: null,
-      azMapsStyleDescription: this.props.azureMapsExtension.styleDescription,
-      azMapsStyleAlias: this.props.azureMapsExtension.styleAlias,
-      azMapsMapConfigurationDescription: this.props.azureMapsExtension.mapConfigurationDescription,
-      azMapsMapConfigurationAlias: this.props.azureMapsExtension.mapConfigurationAlias,
+      styleDescription: this.props.styleDescription,
+      mapConfigurationDescription: this.props.mapConfigurationDescription,
+      mapConfigurationAlias: this.props.mapConfigurationAlias,
       styleDescriptionError: "",
-      styleAliasError: "",
       mapConfigurationDescriptionError: "",
       mapConfigurationAliasError: "",
+      deleteExistingMapConfig: true,
     }
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.mapConfigurationAlias !== this.props.mapConfigurationAlias) {
+      this.setState({
+        mapConfigurationAlias: this.props.mapConfigurationAlias,
+      });
+    }
+    if (prevProps.mapConfigurationDescription !== this.props.mapConfigurationDescription) {
+      this.setState({
+        mapConfigurationDescription: this.props.mapConfigurationDescription,
+      });
+    }
+    if (prevProps.styleDescription !== this.props.styleDescription) {
+      this.setState({
+        styleDescription: this.props.styleDescription,
+      });
+    }
+  }
+
+  toggleDeleteExistingMapConfig() {
+    this.setState({
+      deleteExistingMapConfig: !this.state.deleteExistingMapConfig,
+    }, () => {
+      this.setState({
+        mapConfigurationAliasError: this.checkAliasString(this.state.mapConfigurationAlias),
+      });
+    });
   }
 
   clearError() {
@@ -73,43 +100,45 @@ export default class ModalExport extends React.Component {
     return this.checkStringForLength(inputString);
   }
 
-  checkAliasString = (inputString) => {
+  checkAliasString = (inputString = '') => {
     let result = this.checkStringForLength(inputString);
     if (result) return result;
+    if (this.isAliasAlreadyExists(inputString)) {
+      return 'alias already exists.';
+    }
     if (/[^0-9a-zA-Z-_]/.test(inputString)) {
       return "contains invalid characters";
     }
     return "";
   }
 
+  isAliasAlreadyExists = (alias) => {
+    const existingMapConfigs = this.props.azureMapsExtension.mapConfigurationList.filter((config) => {
+      if (config.mapConfigurationId === this.props.azureMapsExtension.mapConfigurationName && this.state.deleteExistingMapConfig) {
+        return false;
+      }
+      return config.alias === alias;
+    });
+    return existingMapConfigs.length > 0;
+  }
+
   onChangeAzureMapsStyleDescription = (styleDescription) => {
-    this.props.azureMapsExtension.styleDescription = styleDescription;
     this.setState({
-      azMapsStyleDescription: styleDescription,
+      styleDescription,
       styleDescriptionError: this.checkDescriptionString(styleDescription)
     });
   }
 
-  onChangeAzureMapsStyleAlias = (styleAlias) => {
-    this.props.azureMapsExtension.styleAlias = styleAlias;
-    this.setState({
-      azMapsStyleAlias: styleAlias,
-      styleAliasError: this.checkAliasString(styleAlias)
-    });
-  }
-
   onChangeAzureMapsMapConfigurationDescription = (mapConfigurationDescription) => {
-    this.props.azureMapsExtension.mapConfigurationDescription = mapConfigurationDescription;
     this.setState({
-      azMapsMapConfigurationDescription: mapConfigurationDescription,
+      mapConfigurationDescription,
       mapConfigurationDescriptionError: this.checkDescriptionString(mapConfigurationDescription)
     });
   }
 
   onChangeAzureMapsMapConfigurationAlias = (mapConfigurationAlias) => {
-    this.props.azureMapsExtension.mapConfigurationAlias = mapConfigurationAlias;
     this.setState({
-      azMapsMapConfigurationAlias: mapConfigurationAlias,
+      mapConfigurationAlias,
       mapConfigurationAliasError: this.checkAliasString(mapConfigurationAlias)
     });
   }
@@ -117,61 +146,39 @@ export default class ModalExport extends React.Component {
   onClickUploadAzureMapsMapConfiguration = (e) => {
     e.preventDefault();
 
-    const anyAliasOrDescriptionError = !!this.state.styleDescriptionError || !!this.state.styleAliasError || !!this.state.mapConfigurationDescriptionError || !!this.state.mapConfigurationAliasError;
+    const anyAliasOrDescriptionError = !!this.state.styleDescriptionError || !!this.state.mapConfigurationDescriptionError || !!this.state.mapConfigurationAliasError;
     if (anyAliasOrDescriptionError) {
       return;
     }
 
     this.clearError();
 
-    this.props.azureMapsExtension.getStyleId(this.props.azureMapsExtension.styleAlias)
-    .then(styleId => {
-      if (styleId) {
-        this.setState({
-          activePromptCallback: (confirmed) => {
-            this.setState({
-              activePromptCallback: null,
-              activePromptMessage: ""
-            });
-            if (confirmed) {
-              this.checkExistingMapConfigurationAndUpload();
-            }
-          },
-          activePromptMessage: "Do you want to overwrite style "+this.props.azureMapsExtension.styleAlias+"?"
-        });
-      } else {
-        this.checkExistingMapConfigurationAndUpload();
-      }
-    });
-  }
-
-  checkExistingMapConfigurationAndUpload = () => {
-    this.props.azureMapsExtension.getMapConfigurationId(this.props.azureMapsExtension.mapConfigurationAlias)
-    .then(mapConfigurationId => {
-      if (mapConfigurationId) {
-        this.setState({
-          activePromptCallback: (confirmed) => {
-            this.setState({
-              activePromptCallback: null,
-              activePromptMessage: ""
-            });
-            if (confirmed) {
-              this.uploadAzureMapsMapConfiguration();
-            }
-          },
-          activePromptMessage: "Do you want to overwrite map configuration "+this.props.azureMapsExtension.mapConfigurationAlias+"?"
-        });
-      } else {
-        this.uploadAzureMapsMapConfiguration();
-      }
-    });
+    this.props.azureMapsExtension.getMapConfigurationId(this.state.mapConfigurationAlias)
+      .then(mapConfigurationId => {
+        if (mapConfigurationId) {
+          this.setState({
+            activePromptCallback: (confirmed) => {
+              this.setState({
+                activePromptCallback: null,
+                activePromptMessage: ""
+              });
+              if (confirmed) {
+                this.uploadAzureMapsMapConfiguration();
+              }
+            },
+            activePromptMessage: `Map Configuration ID ${mapConfigurationId} will be deleted. Map Configuration Alias ${this.state.mapConfigurationAlias} will point to the newly saved Map Configuration.`
+          });
+        } else {
+          this.uploadAzureMapsMapConfiguration();
+        }
+      });
   }
 
   uploadAzureMapsMapConfiguration = () => {
     let canceled;
     let resultingStyleId;
 
-    this.props.azureMapsExtension.uploadResultingStyle(this.props.mapStyle, canceled)
+    this.props.azureMapsExtension.uploadResultingStyle(this.props.mapStyle, canceled, this.state.styleDescription)
     .then(styleId => {
       if(canceled) {
         return;
@@ -182,7 +189,7 @@ export default class ModalExport extends React.Component {
       });
 
       resultingStyleId = styleId;
-      return this.props.azureMapsExtension.uploadResultingMapConfiguration(styleId, canceled);
+      return this.props.azureMapsExtension.uploadResultingMapConfiguration(styleId, canceled, this.state.mapConfigurationAlias, this.state.mapConfigurationDescription, this.state.deleteExistingMapConfig);
     })
     .then(mapConfigurationId => {
       if(canceled) {
@@ -190,11 +197,11 @@ export default class ModalExport extends React.Component {
       }
 
       this.setState({
-        activeInfo: ["Success!", "Style ID: "+resultingStyleId, "Map configuration ID: "+mapConfigurationId],
+        activeInfo: ["Success!", "Style ID: "+resultingStyleId, "Map configuration ID: "+mapConfigurationId, "Map configuration alias: "+this.state.mapConfigurationAlias],
         activeRequest: null,
         activeRequestMessage: ""
       });
-      this.props.onSuccess(mapConfigurationId);
+      this.props.onSuccess(mapConfigurationId, this.state.mapConfigurationAlias, this.state.mapConfigurationDescription, this.state.styleDescription);
     })
     .catch(err => {
       let errorMessage = 'Failed to upload map configuration';
@@ -225,7 +232,7 @@ export default class ModalExport extends React.Component {
   }
 
   render() {
-    const anyError = !!this.state.error || !!this.state.styleDescriptionError || !!this.state.styleAliasError || !!this.state.mapConfigurationDescriptionError || !!this.state.mapConfigurationAliasError;
+    const anyError = !!this.state.error || !!this.state.styleDescriptionError || !!this.state.mapConfigurationDescriptionError || !!this.state.mapConfigurationAliasError;
 
     let otherErrorElement;
     if (this.state.error) {
@@ -240,14 +247,6 @@ export default class ModalExport extends React.Component {
       styleDescriptionErrorElement = (
         <div>
           Style description: {this.state.styleDescriptionError}<br />
-        </div>
-      )
-    }
-    let styleAliasErrorElement;
-    if (this.state.styleAliasError) {
-      styleAliasErrorElement = (
-        <div>
-          Style alias: {this.state.styleAliasError}<br />
         </div>
       )
     }
@@ -274,7 +273,6 @@ export default class ModalExport extends React.Component {
         <div className="maputnik-modal-error">
           {otherErrorElement}
           {styleDescriptionErrorElement}
-          {styleAliasErrorElement}
           {mapConfigurationDescriptionErrorElement}
           {mapConfigurationAliasErrorElement}
           <a href="#" onClick={() => this.clearError()} className="maputnik-modal-error-close">×</a>
@@ -308,16 +306,9 @@ export default class ModalExport extends React.Component {
               <FieldString
                 label="Style description"
                 fieldSpec={{doc:<p>A user-defined description for this style.</p>}}
-                value={this.props.azureMapsExtension.styleDescription}
+                value={this.state.styleDescription}
                 onChange={this.onChangeAzureMapsStyleDescription}
                 error={this.state.styleDescriptionError}
-              />
-              <FieldString
-                label="Style alias"
-                fieldSpec={{doc:<div><p>An alias that can be used to reference this style. Can contain alphanumeric characters (0-9, a-z, A-Z), hyphen (-) and underscore (_). If empty, this style will need to be referenced by the style ID.</p><p>WARNING! Duplicate aliases are not allowed. If the alias of an existing style is used, that style will be overwritten.</p></div>}}
-                value={this.props.azureMapsExtension.styleAlias}
-                onChange={this.onChangeAzureMapsStyleAlias}
-                error={this.state.styleAliasError}
               />
             </div>
 
@@ -325,19 +316,23 @@ export default class ModalExport extends React.Component {
               <FieldString
                 label="Map configuration description"
                 fieldSpec={{doc:<p>A user-defined description for this map configuration.</p>}}
-                value={this.props.azureMapsExtension.mapConfigurationDescription}
+                value={this.state.mapConfigurationDescription}
                 onChange={this.onChangeAzureMapsMapConfigurationDescription}
                 error={this.state.mapConfigurationDescriptionError}
               />
               <FieldString
                 label="Map configuration alias"
                 fieldSpec={{doc:<div><p>An alias used to reference this map configuration. Can contain alphanumeric characters (0-9, a-z, A-Z), hyphen (-) and underscore (_). If empty, this map configuration will need to be referenced by the map configuration ID.</p><p>WARNING! Duplicate aliases are not allowed. If the alias of an existing map configuration is used, that map configuration will be overwritten.</p></div>}}
-                value={this.props.azureMapsExtension.mapConfigurationAlias}
+                value={this.state.mapConfigurationAlias}
                 onChange={this.onChangeAzureMapsMapConfigurationAlias}
                 error={this.state.mapConfigurationAliasError}
               />
             </div>
-
+            <FieldCheckbox
+              label={`Delete existing map configuration Id: ${this.props.azureMapsExtension.mapConfigurationName}`}
+              value={this.state.deleteExistingMapConfig}
+              onChange={this.toggleDeleteExistingMapConfig.bind(this)}
+            />
             <div className="maputnik-modal-export-buttons">
               <InputButton
                 onClick={this.onClickUploadAzureMapsMapConfiguration.bind(this)}
