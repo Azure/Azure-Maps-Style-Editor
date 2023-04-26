@@ -546,6 +546,12 @@ class AzureMapsExtension {
     }
   }
 
+  updateMapConfigList() {
+    return listMapConfigurations(this.domain, this.subscriptionKey).then((mapConfigs) => {
+      this.mapConfigurationList = mapConfigs.mapConfigurations;
+    });
+  }
+
   async createResultingStyle(
     subscriptionKey,
     domain,
