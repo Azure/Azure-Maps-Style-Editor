@@ -5,7 +5,6 @@ import {formatLayerId} from '../util/format';
 export default class AppMessagePanel extends React.Component {
   static propTypes = {
     errors: PropTypes.array,
-    infos: PropTypes.array,
     mapStyle: PropTypes.object,
     onLayerSelect: PropTypes.func,
     currentLayer: PropTypes.object,
@@ -49,13 +48,8 @@ export default class AppMessagePanel extends React.Component {
       </p>
     })
 
-    const infos = this.props.infos.map((m, i) => {
-      return <p key={"info-"+i}>{m}</p>
-    })
-
     return <div className="maputnik-message-panel">
       {errors}
-      {infos}
     </div>
   }
 }
