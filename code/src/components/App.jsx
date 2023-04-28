@@ -972,8 +972,11 @@ export default class App extends React.Component {
     });
   }
 
-  updateMapConfigId = (mapConfigId) => {
+  updateMapConfigId = (mapConfigId, mapConfigurationAlias, mapConfigurationDescription, styleDescription) => {
     this.state.azureMapsExtension.mapConfigurationName = mapConfigId;
+    this.state.azureMapsExtension.mapConfigurationAlias = mapConfigurationAlias;
+    this.state.azureMapsExtension.mapConfigurationDescription = mapConfigurationDescription;
+    this.state.azureMapsExtension.styleDescription = styleDescription;
   }
 
   render() {
@@ -1063,6 +1066,9 @@ export default class App extends React.Component {
         onOpenToggle={this.toggleModal.bind(this, 'export')}
         azureMapsExtension={this.state.azureMapsExtension}
         onSuccess={this.updateMapConfigId}
+        mapConfigurationAlias={this.state.azureMapsExtension.mapConfigurationAlias}
+        mapConfigurationDescription={this.state.azureMapsExtension.mapConfigurationDescription}
+        styleDescription={this.state.azureMapsExtension.styleDescription}
       />
       <ModalOpen
         onStyleOpen={this.openStyle}
