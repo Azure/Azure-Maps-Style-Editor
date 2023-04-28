@@ -25,10 +25,8 @@ import { downloadGlyphsMetadata, downloadSpriteMetadata } from '../libs/metadata
 import {latest, validate} from '@mapbox/mapbox-gl-style-spec'
 import style from '../libs/style'
 import { initialStyleUrl, loadStyleUrl, removeStyleQuerystring } from '../libs/urlopen'
-import { undoMessages, redoMessages } from '../libs/diffmessage'
 import { StyleStore } from '../libs/stylestore'
 import { ApiStyleStore } from '../libs/apistore'
-import { RevisionStore } from '../libs/revisions'
 import LayerWatcher from '../libs/layerwatcher'
 import tokens from '../config/tokens.json'
 import isEqual from 'lodash.isequal'
@@ -90,7 +88,6 @@ export default class App extends React.Component {
     super(props)
     autoBind(this);
 
-    this.revisionStore = new RevisionStore()
     const params = new URLSearchParams(window.location.search.substring(1))
     let port = params.get("localport")
     if (port == null && (window.location.port != 80 && window.location.port != 443)) {
@@ -182,13 +179,11 @@ export default class App extends React.Component {
 
         if(Debug.enabled()) {
           Debug.set("maputnik", "styleStore", this.styleStore);
-          Debug.set("maputnik", "revisionStore", this.revisionStore);
         }
       })
     }
 
     if(Debug.enabled()) {
-      Debug.set("maputnik", "revisionStore", this.revisionStore);
       Debug.set("maputnik", "styleStore", this.styleStore);
     }
 
@@ -196,7 +191,6 @@ export default class App extends React.Component {
 
     this.state = {
       errors: [],
-      infos: [],
       mapStyle: style.emptyStyle,
       selectableLayers: [],
       selectedLayerIndex: 0,
@@ -237,37 +231,6 @@ export default class App extends React.Component {
     this.layerWatcher = new LayerWatcher({
       onVectorLayersChange: v => this.setState({ vectorLayers: v })
     })
-  }
-
-  handleKeyPress = (e) => {
-    if(navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
-      if(e.metaKey && e.shiftKey && e.keyCode === 90) {
-        e.preventDefault();
-        this.onRedo(e);
-      }
-      else if(e.metaKey && e.keyCode === 90) {
-        e.preventDefault();
-        this.onUndo(e);
-      }
-    }
-    else {
-      if(e.ctrlKey && e.keyCode === 90) {
-        e.preventDefault();
-        this.onUndo(e);
-      }
-      else if(e.ctrlKey && e.keyCode === 89) {
-        e.preventDefault();
-        this.onRedo(e);
-      }
-    }
-  }
-
-  componentDidMount() {
-    window.addEventListener("keydown", this.handleKeyPress);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("keydown", this.handleKeyPress);
   }
 
   saveStyle(snapshotStyle) {
@@ -443,9 +406,6 @@ export default class App extends React.Component {
       this.updateIcons(newStyle.sprite)
     }
 
-    if (opts.addRevision) {
-      this.revisionStore.addRevision(newStyle);
-    }
     if (opts.save) {
       this.saveStyle(newStyle);
     }
@@ -474,25 +434,6 @@ export default class App extends React.Component {
       this.setStateInUrl();
     })
 
-  }
-
-  onUndo = () => {
-    const activeStyle = this.revisionStore.undo()
-
-    const messages = undoMessages(this.state.mapStyle, activeStyle)
-    this.onStyleChanged(activeStyle, {addRevision: false});
-    this.setState({
-      infos: messages,
-    })
-  }
-
-  onRedo = () => {
-    const activeStyle = this.revisionStore.redo()
-    const messages = redoMessages(this.state.mapStyle, activeStyle)
-    this.onStyleChanged(activeStyle, {addRevision: false});
-    this.setState({
-      infos: messages,
-    })
   }
 
   onMoveLayer = (move) => {
@@ -1034,13 +975,12 @@ export default class App extends React.Component {
       errors={this.state.errors}
     /> : null
 
-    const bottomPanel = (this.state.errors.length + this.state.infos.length) > 0 ? <MessagePanel
+    const bottomPanel = (this.state.errors.length) > 0 ? <MessagePanel
       currentLayer={selectedLayer}
       selectedLayerIndex={this.state.selectedLayerIndex}
       onLayerSelect={this.onLayerSelect}
       mapStyle={this.state.mapStyle}
       errors={this.state.errors}
-      infos={this.state.infos}
     /> : null
 
 
