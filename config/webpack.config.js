@@ -55,7 +55,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'Maputnik',
+      title: 'Style Editor',
       template: './src/template.html'
     }),
     new CopyWebpackPlugin({
