@@ -32,10 +32,10 @@ export default class ModalPrompt extends React.Component {
       {this.props.message}
       <p className="maputnik-dialog__buttons">
         <InputButton onClick={() => this.props.onOpenToggle(true)}>
-          Yes
+          Continue
         </InputButton>
         <InputButton onClick={() => this.props.onOpenToggle(false)}>
-          No
+          Cancel
         </InputButton>
       </p>
     </Modal>
