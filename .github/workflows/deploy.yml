@@ -1,6 +1,6 @@
 # This workflow builds current main and pushes it to gh-pages branch.
 
-name: Build for Deployment
+name: Deploy to gh-pages
 
 on:
   push:
