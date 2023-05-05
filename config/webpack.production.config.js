@@ -1,5 +1,4 @@
 var webpack = require('webpack');
-var path = require('path');
 var rules = require('./webpack.rules');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var WebpackCleanupPlugin = require('webpack-cleanup-plugin');
@@ -7,7 +6,7 @@ var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlug
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var artifacts = require("../test/artifacts");
 
-var OUTPATH = artifacts.pathSync("/build");
+var OUTPATH = artifacts.pathSync(".");
 
 module.exports = {
   entry: {
@@ -42,7 +41,7 @@ module.exports = {
     }),
     new HtmlWebpackPlugin({
       template: './src/template.html',
-      title: 'Maputnik'
+      title: 'Style Editor'
     }),
     new CopyWebpackPlugin({
       patterns: [
