@@ -1,6 +1,6 @@
 # This workflow builds current main and pushes it to gh-pages branch.
 
-name: Deploy to gh-pages
+name: Merge to gh-pages
 
 on:
   push:
