@@ -921,6 +921,7 @@ export default class App extends React.Component {
   }
 
   render() {
+    console.log('test');
     const layers = this.state.selectableLayers
     const selectedLayer = layers.length > 0 ? layers[this.state.selectedLayerIndex] : null
     const mapData = {
