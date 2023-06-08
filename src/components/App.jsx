@@ -36,9 +36,9 @@ import azureMapsExt from '../libs/azure-maps-ext';
 
 import MapboxGl from 'mapbox-gl'
 
-const levelOrdinalFilterExceptionLayers = ['indoor_level', 'indoor_facility'];
-const isLevelOrdinalExceptionLayer = (layerId) => (
-  levelOrdinalFilterExceptionLayers.some((exceptionLayerName) => layerId.startsWith(exceptionLayerName))
+const levelOrdinalFilterExceptionLayers = ['facility', 'facility_area', 'level', 'level_area'];
+const isLevelOrdinalExceptionLayer = (layer) => (
+  levelOrdinalFilterExceptionLayers.some((exceptionLayer) => layer['source-layer'] === exceptionLayer)
 )
 
 // Similar functionality as <https://github.com/mapbox/mapbox-gl-js/blob/7e30aadf5177486c2cfa14fe1790c60e217b5e56/src/util/mapbox.js>
@@ -752,7 +752,7 @@ export default class App extends React.Component {
       return layers;
     }
     return layers.map((layer) => {
-      if (!isLayerSelectable(layer) || isLevelOrdinalExceptionLayer(layer.id)) {
+      if (!isLayerSelectable(layer) || isLevelOrdinalExceptionLayer(layer)) {
         return layer;
       }
       if (layer.filter === undefined) {
