@@ -36,10 +36,10 @@ import azureMapsExt from '../libs/azure-maps-ext';
 
 import MapboxGl from 'mapbox-gl'
 
-const levelOrdinalFilterExceptionLayers = ['facility', 'facility_area', 'level', 'level_area'];
-const isLevelOrdinalExceptionLayer = (layer) => (
-  levelOrdinalFilterExceptionLayers.some((exceptionLayer) => layer['source-layer'] === exceptionLayer)
-)
+const facilityLayers = ['facility', 'facility_area'];
+const levelLayers = ['level', 'level_area'];
+const isFacilityLayer = (layer) => facilityLayers.includes(layer['source-layer']?.toLowerCase());
+const isLevelLayer = (layer) => levelLayers.includes(layer['source-layer']?.toLowerCase());
 
 // Similar functionality as <https://github.com/mapbox/mapbox-gl-js/blob/7e30aadf5177486c2cfa14fe1790c60e217b5e56/src/util/mapbox.js>
 function normalizeSourceURL (url, apiToken="") {
@@ -752,26 +752,27 @@ export default class App extends React.Component {
       return layers;
     }
     return layers.map((layer) => {
-      if (!isLayerSelectable(layer) || isLevelOrdinalExceptionLayer(layer)) {
+      if (!isLayerSelectable(layer) || isFacilityLayer(layer)) {
         return layer;
       }
+      const ordinalProp = isLevelLayer(layer) ? 'ordinal' : 'levelOrdinal';
       if (layer.filter === undefined) {
         return {
           ...layer,
-          filter: ['all', ['==', 'levelOrdinal', this.state.minOrdinal]],
+          filter: ['all', ['==', ordinalProp, this.state.minOrdinal]],
         }
       }
       if (!['all', 'none', 'any'].includes(layer.filter[0])) {
-        if (layer.filter[1] !== 'levelOrdinal') {
+        if (layer.filter[1] !== ordinalProp) {
           return {
             ...layer,
-            filter: ['all', ['==', 'levelOrdinal', this.state.minOrdinal], layer.filter],
+            filter: ['all', ['==', ordinalProp, this.state.minOrdinal], layer.filter],
           }
         }
         return layer;
       }
 
-      const layerHasOrdinalFilter = layer.filter.some((filter) => typeof filter === 'object' && filter[1] === 'levelOrdinal');
+      const layerHasOrdinalFilter = layer.filter.some((filter) => typeof filter === 'object' && filter[1] === ordinalProp);
       if (layerHasOrdinalFilter) {
         return layer;
       }
@@ -779,13 +780,13 @@ export default class App extends React.Component {
       if (layer.filter[0] === 'all') {
         return {
           ...layer,
-          filter: ['all', ['==', 'levelOrdinal', this.state.minOrdinal], ...layer.filter.slice(1)],
+          filter: ['all', ['==', ordinalProp, this.state.minOrdinal], ...layer.filter.slice(1)],
         }
       }
       if (layer.filter[0] === 'none') {
         return {
           ...layer,
-          filter: ['all', ['!=', 'levelOrdinal', this.state.minOrdinal], ...layer.filter.slice(1)],
+          filter: ['all', ['!=', ordinalProp, this.state.minOrdinal], ...layer.filter.slice(1)],
         }
       }
 
