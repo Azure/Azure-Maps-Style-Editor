@@ -202,11 +202,7 @@ export default class ModalExport extends React.Component {
         activeRequestMessage: ""
       });
       this.props.onSuccess(mapConfigurationId, this.state.mapConfigurationAlias, this.state.mapConfigurationDescription, this.state.styleDescription);
-      this.props.azureMapsExtension.updateMapConfigList().then(() => {
-        this.setState({
-          mapConfigurationAliasError: this.checkAliasString(this.state.mapConfigurationAlias),
-        });
-      });
+      this.props.azureMapsExtension.updateMapConfigList();
     })
     .catch(err => {
       let errorMessage = 'Failed to upload map configuration';
