@@ -104,7 +104,8 @@ export default class ModalOpen extends React.Component {
         azMapsMapConfigurationList: mapConfigurationList.mapConfigurations,
         azMapsMapConfigurationListOptions: mapConfigurationListOptions,
         azMapsMapConfigurationName: mapConfigurationName,
-        azMapsConfigTupleIndex: ""
+        azMapsConfigTupleIndex: "",
+        error: mapConfigurationListOptions.length === 0 ? 'No map configurations found.' : '',
       })
 
       // If there is just a single map configuration then load it automatically
