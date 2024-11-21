@@ -1,7 +1,7 @@
 // TOOLBAR
 .maputnik-toolbar {
   position: fixed;
-  height: $toolbar-height;
+  height: $toolbar-height + $toolbar-deprecation-height;
   width: 100%;
   z-index: 100;
   left: 0;

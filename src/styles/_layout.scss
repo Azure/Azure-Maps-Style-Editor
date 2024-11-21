@@ -17,8 +17,8 @@
   &-list {
     position: fixed;
     bottom: 0;
-    height: calc(100% - #{$toolbar-height + $toolbar-offset});
-    top: $toolbar-height + $toolbar-offset;
+    height: calc(100% - #{$toolbar-height + $toolbar-deprecation-height + $toolbar-offset});
+    top: $toolbar-height + $toolbar-deprecation-height + $toolbar-offset;
     left: 0;
     z-index: 3;
     width: 245px;
@@ -28,8 +28,8 @@
   &-drawer {
     position: fixed;
     bottom: 0;
-    height: calc(100% - #{$toolbar-height + $toolbar-offset});
-    top: $toolbar-height + $toolbar-offset;
+    height: calc(100% - #{$toolbar-height + $toolbar-deprecation-height + $toolbar-offset});
+    top: $toolbar-height + $toolbar-deprecation-height + $toolbar-offset;
     left: 245px;
     z-index: 1;
     width: 325px;

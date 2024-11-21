@@ -1,10 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import {MdOpenInBrowser, MdSave, MdLayers} from 'react-icons/md'
+import {MdOpenInBrowser, MdSave, MdLayers, MdErrorOutline} from 'react-icons/md'
 
 import logoImage from 'maputnik-design/logos/logo-color.svg'
 import pkgJson from '../../package.json'
+import { deprecations } from 'sass'
 
 class IconText extends React.Component {
   static propTypes = {
@@ -72,6 +73,7 @@ export default class AppToolbar extends React.Component {
       settings: false,
       sources: false,
       open: false,
+      deprecation: false,
       add: false,
       export: false,
     }
@@ -214,6 +216,14 @@ export default class AppToolbar extends React.Component {
           </div>
           {this.props.mapData.styleName && <div>Style: {this.props.mapData.styleName}</div>}
         </div>
+      </div>
+      <div className="maputnik-toolbar__inner" style={{paddingLeft:"10px"}}>
+        <p style={{fontSize:"16px", color:"#D9534F"}}><MdErrorOutline /> Note: The Azure Maps Creator indoor map service is now deprecated and will be retired on 9/30/25. For more information, see&nbsp;
+          <a href='https://aka.ms/AzureMapsCreatorDeprecation'
+            style={{color:"#D9534F", fontWeight:"bold"}}>
+            End of Life Announcement of Azure Maps Creator.
+          </a>
+        </p>
       </div>
     </nav>
   }

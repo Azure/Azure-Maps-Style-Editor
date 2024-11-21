@@ -20,6 +20,7 @@ import ModalExport from './ModalExport'
 import ModalOpen from './ModalOpen'
 import ModalShortcuts from './ModalShortcuts'
 import ModalDebug from './ModalDebug'
+import ModalDeprecation from './ModalDeprecation';
 
 import { downloadGlyphsMetadata, downloadSpriteMetadata } from '../libs/metadata'
 import {latest, validate} from '@mapbox/mapbox-gl-style-spec'
@@ -213,6 +214,7 @@ export default class App extends React.Component {
         settings: false,
         sources: false,
         open: false,
+        deprecation: false,
         shortcuts: false,
         export: false,
         // TODO: Disabled for now, this should be opened on the Nth visit to the editor
@@ -824,7 +826,7 @@ export default class App extends React.Component {
 
   getInitialStateFromUrl = (mapStyle) => {
     // Let's show "Open" modal at first to get Azure Maps subscription key
-    const modalObj = {"open": true};
+    const modalObj = {"open": true, "deprecation": true};
 
     const url = new URL(location.href);
     const modalParam = url.searchParams.get("modal");
@@ -1019,6 +1021,12 @@ export default class App extends React.Component {
         onStyleOpen={this.openStyle}
         isOpen={this.state.isOpen.open}
         onOpenToggle={this.toggleModal.bind(this, 'open')}
+        azureMapsExtension={this.state.azureMapsExtension}
+      />
+      <ModalDeprecation
+        onStyleOpen={this.openStyle}
+        isOpen={this.state.isOpen.deprecation}
+        onOpenToggle={this.toggleModal.bind(this, 'deprecation')}
         azureMapsExtension={this.state.azureMapsExtension}
       />
     </div>
