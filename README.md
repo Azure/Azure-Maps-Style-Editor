@@ -1,5 +1,11 @@
 # Project
 
+## DEPRECATED
+
+This plugin is now deprecated with the deprecation of Azure Maps Creator Services. See [Azure Creator Services EOL Annoucement](https://azure.microsoft.com/en-us/updates?id=azure-maps-creator-services-retirement-on-30-september-2025)
+
+----
+
 > This repo has been populated by an initial template to help get you started. Please
 > make sure to update the content to build a great experience for community-building.
 
